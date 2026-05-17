@@ -1,6 +1,6 @@
-from spotify.device import validate_active_device
+def main():
+    print("Spotify Voice Bot")
 
-device = validate_active_device()
 
-print("Dispositivo activo:")
-print(device["name"])
+if __name__ == "__main__":
+    main()
