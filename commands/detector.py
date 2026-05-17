@@ -8,6 +8,7 @@ from commands.intents import (
     NEXT_TRACK,
     PREVIOUS_TRACK,
     LIKE_SONG,
+    REPEAT_LAST,
     UNKNOWN
 )
 
@@ -21,6 +22,12 @@ INTENT_KEYWORDS = {
     PLAY_ALBUM: [
         "álbum",
         "album"
+    ],
+
+    REPEAT_LAST: [
+        "otra vez",
+        "repite",
+        "repetir"
     ],
 
     PLAY_TRACK: [
@@ -59,7 +66,7 @@ INTENT_KEYWORDS = {
     LIKE_SONG: [
         "like",
         "me gusta"
-    ]
+    ],
 }
 
 def detect_intent(text):
