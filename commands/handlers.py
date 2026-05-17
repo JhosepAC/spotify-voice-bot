@@ -6,12 +6,51 @@ from spotify.player import (
 )
 
 from spotify.playback import (
-    play_track
+    play_track,
+    play_artist,
+    play_album,
+    play_playlist
 )
 
 from spotify.library import (
     like_current_track
 )
+
+
+def handle_play_artist(artist_name):
+
+    artist = play_artist(artist_name)
+
+    if not artist:
+        return "Artist not found"
+
+    return (
+        f'Playing artist {artist["name"]}'
+    )
+
+
+def handle_play_album(album_name):
+
+    album = play_album(album_name)
+
+    if not album:
+        return "Album not found"
+
+    return (
+        f'Playing album {album["name"]}'
+    )
+
+
+def handle_play_playlist(playlist_name):
+
+    playlist = play_playlist(playlist_name)
+
+    if not playlist:
+        return "Playlist not found"
+
+    return (
+        f'Playing playlist {playlist["name"]}'
+    )
 
 
 def handle_pause():
@@ -39,6 +78,7 @@ def handle_previous_track():
 
 
 def handle_play_track(track_name):
+
     track = play_track(track_name)
 
     if not track:
@@ -51,6 +91,7 @@ def handle_play_track(track_name):
 
 
 def handle_like_song():
+
     success = like_current_track()
 
     if not success:
