@@ -1,13 +1,10 @@
-from commands.parser import parse_command
-from commands.router import route_command
-
-text = "pon blinding lights"
-
-parsed = parse_command(text)
-
-response = route_command(
-    parsed["intent"],
-    parsed["entities"]
+from assistant.pipeline import (
+    run_voice_assistant
 )
 
-print(response)
+def main():
+
+    run_voice_assistant()
+
+if __name__ == "__main__":
+    main()
