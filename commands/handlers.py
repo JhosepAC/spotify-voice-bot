@@ -16,6 +16,10 @@ from spotify.library import (
     like_current_track
 )
 
+from context.manager import (
+    get_context
+)
+
 
 def handle_play_artist(artist_name):
 
@@ -64,6 +68,35 @@ def handle_resume():
 
     return "Playback resumed"
 
+def handle_repeat_last():
+
+    context = get_context()
+
+    if context.last_track:
+
+        return handle_play_track(
+            context.last_track
+        )
+
+    if context.last_artist:
+
+        return handle_play_artist(
+            context.last_artist
+        )
+
+    if context.last_album:
+
+        return handle_play_album(
+            context.last_album
+        )
+
+    if context.last_playlist:
+
+        return handle_play_playlist(
+            context.last_playlist
+        )
+
+    return "Nothing to repeat"
 
 def handle_next_track():
     next_track()
