@@ -1,4 +1,7 @@
 from commands.intents import (
+    PLAY_ARTIST,
+    PLAY_ALBUM,
+    PLAY_PLAYLIST,
     PLAY_TRACK,
     PAUSE,
     RESUME,
@@ -9,46 +12,55 @@ from commands.intents import (
 )
 
 INTENT_KEYWORDS = {
-    PAUSE: [
-        "pausa",
-        "pausar",
-        "detén",
-        "detener",
-        "para"
+
+    PLAY_PLAYLIST: [
+        "playlist",
+        "lista"
     ],
 
-    RESUME: [
-        "reanuda",
-        "continúa",
-        "seguir"
-    ],
-
-    NEXT_TRACK: [
-        "siguiente",
-        "next",
-        "salta"
-    ],
-
-    PREVIOUS_TRACK: [
-        "anterior",
-        "retrocede",
-        "previa"
-    ],
-
-    LIKE_SONG: [
-        "like",
-        "me gusta",
-        "favorita",
-        "guardar canción"
+    PLAY_ALBUM: [
+        "álbum",
+        "album"
     ],
 
     PLAY_TRACK: [
         "pon",
         "reproduce",
         "toca"
+    ],
+
+    PLAY_ARTIST: [
+        "artista",
+        "música de",
+        "canciones de"
+    ],
+
+    PAUSE: [
+        "pausa",
+        "pausar",
+        "detén"
+    ],
+
+    RESUME: [
+        "reanuda",
+        "continúa"
+    ],
+
+    NEXT_TRACK: [
+        "siguiente",
+        "next"
+    ],
+
+    PREVIOUS_TRACK: [
+        "anterior",
+        "retrocede"
+    ],
+
+    LIKE_SONG: [
+        "like",
+        "me gusta"
     ]
 }
-
 
 def detect_intent(text):
     """

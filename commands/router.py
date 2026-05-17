@@ -1,4 +1,7 @@
 from commands.intents import (
+    PLAY_ARTIST,
+    PLAY_ALBUM,
+    PLAY_PLAYLIST,
     PLAY_TRACK,
     PAUSE,
     RESUME,
@@ -8,6 +11,9 @@ from commands.intents import (
 )
 
 from commands.handlers import (
+    handle_play_artist,
+    handle_play_album,
+    handle_play_playlist,
     handle_pause,
     handle_resume,
     handle_next_track,
@@ -30,6 +36,21 @@ def route_command(intent, entities=None):
     """
 
     entities = entities or {}
+
+    if intent == PLAY_ARTIST:
+        return handle_play_artist(
+            entities.get("artist_name")
+        )
+
+    if intent == PLAY_ALBUM:
+        return handle_play_album(
+            entities.get("album_name")
+        )
+
+    if intent == PLAY_PLAYLIST:
+        return handle_play_playlist(
+            entities.get("playlist_name")
+        )
 
     if intent == PAUSE:
         return handle_pause()
