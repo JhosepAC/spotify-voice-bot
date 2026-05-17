@@ -1,9 +1,14 @@
 import pyttsx3
 
+from config.settings import (
+    TTS_RATE,
+    TTS_VOLUME
+)
+
 engine = pyttsx3.init()
 
-engine.setProperty("rate", 175)
-engine.setProperty("volume", 1.0)
+engine.setProperty("rate", TTS_RATE)
+engine.setProperty("volume", TTS_VOLUME)
 
 
 def speak(text):
