@@ -5,21 +5,31 @@ import os
 
 load_dotenv()
 
-scope = (
+SCOPES = (
     "user-read-playback-state "
     "user-modify-playback-state "
     "user-library-modify "
     "user-library-read"
 )
 
-sp = spotipy.Spotify(
-    auth_manager=SpotifyOAuth(
+CACHE_PATH = ".spotify_cache"
+
+
+def create_spotify_client():
+    auth_manager = SpotifyOAuth(
         client_id=os.getenv("SPOTIFY_CLIENT_ID"),
         client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
         redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
-        scope=scope
+        scope=SCOPES,
+        cache_path=CACHE_PATH,
+        open_browser=True
     )
-)
+
+    return spotipy.Spotify(auth_manager=auth_manager)
+
+
+sp = create_spotify_client()
+
 
 def get_spotify_client():
     return sp
