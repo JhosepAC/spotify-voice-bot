@@ -10,6 +10,10 @@ from prediction.command_predictor import (
     CommandPredictor
 )
 
+from execution.execution_manager import (
+    ExecutionManager
+)
+
 
 class StreamProcessor:
 
@@ -21,6 +25,10 @@ class StreamProcessor:
 
         self.command_predictor = (
             CommandPredictor()
+        )
+
+        self.execution_manager = (
+            ExecutionManager()
         )
 
         self.processing = False
@@ -69,9 +77,23 @@ class StreamProcessor:
             )
 
             print(
-                f"PREDICTED INTENT: "
+                f"PREDICTED: "
                 f"{prediction.intent}"
             )
+
+            response = (
+                self.execution_manager
+                .process_prediction(
+                    partial_text,
+                    prediction
+                )
+            )
+
+            if response:
+
+                print(
+                    f"EXECUTED: {response}"
+                )
 
     def stop(self):
         """
@@ -79,3 +101,5 @@ class StreamProcessor:
         """
 
         self.processing = False
+
+        self.execution_manager.reset()
