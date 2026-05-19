@@ -1,32 +1,40 @@
+import tempfile
+
 import sounddevice as sd
+
 from scipy.io.wavfile import write
 
-from config.settings import (
-    AUDIO_FILENAME,
-    AUDIO_DURATION,
-    AUDIO_SAMPLE_RATE,
-    AUDIO_CHANNELS
-)
+
+SAMPLE_RATE = 44100
+
+DURATION = 5
 
 
 def record_audio():
-    print("Grabando audio...")
+    """
+    Record command audio.
+    """
+
+    print("Listening command...")
 
     recording = sd.rec(
-        int(AUDIO_DURATION * AUDIO_SAMPLE_RATE),
-        samplerate=AUDIO_SAMPLE_RATE,
-        channels=AUDIO_CHANNELS,
+        int(DURATION * SAMPLE_RATE),
+        samplerate=SAMPLE_RATE,
+        channels=1,
         dtype="int16"
     )
 
     sd.wait()
 
+    temp_file = tempfile.NamedTemporaryFile(
+        suffix=".wav",
+        delete=False
+    )
+
     write(
-        AUDIO_FILENAME,
-        AUDIO_SAMPLE_RATE,
+        temp_file.name,
+        SAMPLE_RATE,
         recording
     )
 
-    print("Grabación finalizada")
-
-    return str(AUDIO_FILENAME)
+    return temp_file.name
