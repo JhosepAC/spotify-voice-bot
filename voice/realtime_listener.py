@@ -17,8 +17,12 @@ from voice.silence_detector import (
     SilenceDetector
 )
 
-from voice.speech_engine import (
-    transcribe_audio
+from voice.realtime_buffer import (
+    RealtimeBuffer
+)
+
+from voice.stream_processor import (
+    StreamProcessor
 )
 
 from voice.transcript_optimizer import (
@@ -28,13 +32,21 @@ from voice.transcript_optimizer import (
 
 def listen_realtime():
     """
-    Listen realtime speech dynamically.
+    Listen realtime speech.
     """
 
     recorder = StreamRecorder()
 
     silence_detector = (
         SilenceDetector()
+    )
+
+    audio_buffer = (
+        RealtimeBuffer()
+    )
+
+    stream_processor = (
+        StreamProcessor()
     )
 
     recorder.start()
@@ -45,8 +57,17 @@ def listen_realtime():
 
     collector_thread.start()
 
+    processor_thread = threading.Thread(
+
+        target=stream_processor.process_audio,
+
+        args=(audio_buffer,)
+    )
+
+    processor_thread.start()
+
     print(
-        "Listening realtime..."
+        "Realtime listening..."
     )
 
     voice_detected = False
@@ -55,6 +76,10 @@ def listen_realtime():
 
         audio_chunk = (
             audio_queue.get()
+        )
+
+        audio_buffer.add_chunk(
+            audio_chunk
         )
 
         audio_bytes = (
@@ -83,18 +108,20 @@ def listen_realtime():
 
     recorder.stop()
 
+    stream_processor.stop()
+
     collector_thread.join()
 
-    audio_path = (
-        recorder.save_audio()
-    )
+    processor_thread.join()
 
-    transcript = transcribe_audio(
-        audio_path
+    final_text = (
+        stream_processor
+        .live_transcript
+        .get()
     )
 
     optimized = optimize_transcript(
-        transcript
+        final_text
     )
 
     return optimized
