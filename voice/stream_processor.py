@@ -1,11 +1,13 @@
-import threading
-
 from voice.partial_transcriber import (
     transcribe_partial
 )
 
 from voice.live_transcript import (
     LiveTranscript
+)
+
+from prediction.command_predictor import (
+    CommandPredictor
 )
 
 
@@ -15,6 +17,10 @@ class StreamProcessor:
 
         self.live_transcript = (
             LiveTranscript()
+        )
+
+        self.command_predictor = (
+            CommandPredictor()
         )
 
         self.processing = False
@@ -44,15 +50,28 @@ class StreamProcessor:
                 )
             )
 
-            if partial_text:
+            if not partial_text:
+                continue
 
-                self.live_transcript.update(
+            self.live_transcript.update(
+                partial_text
+            )
+
+            prediction = (
+                self.command_predictor
+                .process_partial_text(
                     partial_text
                 )
+            )
 
-                print(
-                    f"LIVE: {partial_text}"
-                )
+            print(
+                f"LIVE: {partial_text}"
+            )
+
+            print(
+                f"PREDICTED INTENT: "
+                f"{prediction.intent}"
+            )
 
     def stop(self):
         """
