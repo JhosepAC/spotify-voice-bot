@@ -1,42 +1,71 @@
-from voice.listener import record_audio
-from voice.whisper_engine import transcribe_audio
+from wakeword.listener import (
+    wait_for_wake_word
+)
+
+from voice.listener import (
+    record_audio
+)
+
+from voice.whisper_engine import (
+    transcribe_audio
+)
+
 from voice.speaker import speak
 
-from commands.parser import parse_command
-from commands.router import route_command
+from commands.parser import (
+    parse_command
+)
+
+from commands.router import (
+    route_command
+)
 
 
 def run_voice_assistant():
 
-    try:
+    while True:
 
-        speak("Listening...")
+        wait_for_wake_word()
 
-        audio_file = record_audio()
+        speak("Yes?")
 
-        text = transcribe_audio(audio_file)
+        try:
 
-        if not text:
-            speak("I could not understand audio")
-            return
+            audio_file = record_audio()
 
-        print(f"User: {text}")
+            text = transcribe_audio(
+                audio_file
+            )
 
-        parsed_command = parse_command(text)
+            if not text:
 
-        response = route_command(
-            parsed_command["intent"],
-            parsed_command["entities"]
-        )
+                speak(
+                    "I could not understand"
+                )
 
-        print(f"Assistant: {response}")
+                continue
 
-        speak(response)
+            print(f"User: {text}")
 
-    except Exception as error:
+            parsed_command = parse_command(
+                text
+            )
 
-        print(error)
+            response = route_command(
+                parsed_command["intent"],
+                parsed_command["entities"]
+            )
 
-        speak(
-            "An error occurred"
-        )
+            print(
+                f"Assistant: {response}"
+            )
+
+            speak(response)
+
+        except Exception as error:
+
+            print(error)
+
+            speak(
+                "An error occurred"
+            )
