@@ -6,6 +6,15 @@ from faster_whisper import (
     WhisperModel
 )
 
+from voice.audio_config import (
+    WHISPER_MODEL_SIZE,
+    WHISPER_LANGUAGE,
+    WHISPER_BEAM_SIZE,
+    WHISPER_BEST_OF,
+    WHISPER_TEMPERATURE,
+    DEBUG_TRANSCRIPTION
+)
+
 
 print(
     "Loading Faster-Whisper model..."
@@ -13,17 +22,21 @@ print(
 
 model = WhisperModel(
 
-    "medium",
+    WHISPER_MODEL_SIZE,
 
     device="cpu",
 
-    compute_type="int8"
+    compute_type="int8",
+
+    cpu_threads=8,
+
+    num_workers=2
 )
 
 
 def transcribe_audio(audio_data):
     """
-    High accuracy transcription.
+    Optimized realtime transcription.
     """
 
     if audio_data is None:
@@ -53,15 +66,23 @@ def transcribe_audio(audio_data):
 
             temp_audio.name,
 
-            language="es",
+            language=WHISPER_LANGUAGE,
 
-            beam_size=5,
+            beam_size=WHISPER_BEAM_SIZE,
+
+            best_of=WHISPER_BEST_OF,
+
+            temperature=WHISPER_TEMPERATURE,
 
             vad_filter=True,
 
-            vad_parameters=dict(
-                min_silence_duration_ms=500
-            )
+            word_timestamps=False,
+
+            condition_on_previous_text=False,
+
+            compression_ratio_threshold=2.4,
+
+            no_speech_threshold=0.5
         )
 
         text = " ".join(
@@ -69,6 +90,12 @@ def transcribe_audio(audio_data):
             segment.text
 
             for segment in segments
-        )
+        ).strip()
 
-        return text.strip()
+        if DEBUG_TRANSCRIPTION:
+
+            print(
+                f"TRANSCRIBED: {text}"
+            )
+
+        return text

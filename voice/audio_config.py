@@ -73,7 +73,7 @@ MAX_RECORDING_SECONDS = 12
 # WHISPER
 # =========================
 
-WHISPER_MODEL_SIZE = "small"
+WHISPER_MODEL_SIZE = "medium"
 
 WHISPER_LANGUAGE = "es"
 
