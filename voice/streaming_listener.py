@@ -7,21 +7,13 @@ import sounddevice as sd
 from voice.audio_config import (
     SAMPLE_RATE,
     CHANNELS,
+    DTYPE,
     CHUNK_SIZE,
-    MAX_SILENCE_SECONDS
-)
-
-from voice.vad_detector import (
-    is_speech
-)
-
-from voice.audio_buffer import (
-    AudioBuffer
-)
-
-from voice.audio_preprocessor import (
-    normalize_audio,
-    remove_noise
+    MAX_SILENCE_DURATION,
+    MIN_SPEECH_DURATION,
+    BASE_ENERGY_THRESHOLD,
+    DEBUG_VAD,
+    MAX_RECORDING_SECONDS
 )
 
 
@@ -29,86 +21,168 @@ class StreamingListener:
 
     def __init__(self):
 
-        self.buffer = AudioBuffer()
+        self.sample_rate = SAMPLE_RATE
+
+        self.chunk_size = CHUNK_SIZE
+
+        self.channels = CHANNELS
+
+        self.dtype = DTYPE
+
+        self.energy_threshold = (
+            BASE_ENERGY_THRESHOLD
+        )
+
+    def calculate_audio_energy(
+        self,
+        audio_chunk
+    ):
+        """
+        Calculate RMS energy.
+        """
+
+        return np.sqrt(
+            np.mean(
+                np.square(audio_chunk)
+            )
+        )
+
+    def is_speech(
+        self,
+        audio_chunk
+    ):
+        """
+        Detect speech activity.
+        """
+
+        energy = self.calculate_audio_energy(
+            audio_chunk
+        )
+
+        if DEBUG_VAD:
+
+            print(
+                f"Energy: {energy:.6f}"
+            )
+
+        return (
+            energy > self.energy_threshold
+        )
 
     def listen(self):
         """
-        Listen natural speech.
+        Listen for realtime speech.
         """
+
+        print(
+            "Listening..."
+        )
+
+        audio_buffer = []
+
+        speech_detected = False
 
         silence_start = None
 
-        started = False
+        recording_start = time.time()
 
         with sd.InputStream(
 
-            samplerate=SAMPLE_RATE,
+            samplerate=self.sample_rate,
 
-            channels=CHANNELS,
+            channels=self.channels,
 
-            blocksize=CHUNK_SIZE,
+            dtype=self.dtype,
 
-            dtype="float32"
+            blocksize=self.chunk_size
 
         ) as stream:
-
-            print("Listening...")
 
             while True:
 
                 chunk, _ = stream.read(
-                    CHUNK_SIZE
+                    self.chunk_size
                 )
 
                 chunk = chunk.flatten()
 
-                speech_detected = (
-                    is_speech(chunk)
-                )
+                current_time = time.time()
 
-                if speech_detected:
+                if self.is_speech(chunk):
 
-                    started = True
+                    if not speech_detected:
+
+                        speech_detected = True
+
+                        if DEBUG_VAD:
+
+                            print(
+                                "Speech detected"
+                            )
 
                     silence_start = None
 
-                    self.buffer.add(chunk)
+                    audio_buffer.extend(
+                        chunk
+                    )
 
-                elif started:
+                elif speech_detected:
 
-                    self.buffer.add(chunk)
+                    audio_buffer.extend(
+                        chunk
+                    )
 
                     if silence_start is None:
 
                         silence_start = (
-                            time.time()
+                            current_time
                         )
 
                     silence_duration = (
-                        time.time()
-                        -
-                        silence_start
+                        current_time
+                        - silence_start
                     )
 
                     if (
                         silence_duration
-                        >=
-                        MAX_SILENCE_SECONDS
+                        >= MAX_SILENCE_DURATION
                     ):
+
                         break
 
-        audio = np.concatenate(
-            self.buffer.get_audio()
+                if (
+                    current_time
+                    - recording_start
+                    >= MAX_RECORDING_SECONDS
+                ):
+
+                    break
+
+        if len(audio_buffer) == 0:
+
+            return np.array(
+                [],
+                dtype=np.float32
+            )
+
+        audio_array = np.array(
+            audio_buffer,
+            dtype=np.float32
         )
 
-        self.buffer.clear()
-
-        audio = normalize_audio(
-            audio
+        speech_duration = (
+            len(audio_array)
+            / self.sample_rate
         )
 
-        audio = remove_noise(
-            audio
-        )
+        if (
+            speech_duration
+            < MIN_SPEECH_DURATION
+        ):
 
-        return audio
+            return np.array(
+                [],
+                dtype=np.float32
+            )
+
+        return audio_array
