@@ -1,32 +1,49 @@
 from typing import cast
+
 import whisper
 
-from voice.audio_enhancer import enhance_audio
-
-print("Loading Whisper model...")
-
-model = whisper.load_model("small")
+from voice.audio_enhancer import (
+    enhance_audio
+)
 
 
-def transcribe_audio(audio_path: str) -> str:
+print(
+    "Loading Whisper model..."
+)
+
+
+model = whisper.load_model(
+    "small"
+)
+
+
+
+def transcribe_audio(audio_path):
     """
-    Transcribe audio using Whisper.
+    Transcribe microphone audio.
     """
 
-    enhanced_audio = enhance_audio(audio_path)
+    enhanced_audio = enhance_audio(
+        audio_path
+    )
 
     result = model.transcribe(
         enhanced_audio,
-        language="es",
-        task="transcribe",
+
         fp16=False,
+
         temperature=0,
+
         beam_size=5,
-        best_of=5
+
+        best_of=5,
+
+        language="es"
     )
 
-    text = cast(str, result["text"])
+    text = cast(
+        str,
+        result["text"]
+    )
 
-    text = text.strip()
-
-    return text
+    return text.strip()

@@ -6,15 +6,13 @@ from voice.speech_engine import (
     transcribe_audio
 )
 
-from voice.language_optimizer import (
+from voice.transcript_optimizer import (
     optimize_transcript
 )
 
-from voice.transcript_validator import (
-    validate_transcript
-)
 
-def listen_command(duration=5):
+
+def listen_command(duration=6):
     """
     Listen and process command.
     """
@@ -30,12 +28,5 @@ def listen_command(duration=5):
     optimized_text = optimize_transcript(
         transcript
     )
-
-    is_valid = validate_transcript(
-        optimized_text
-    )
-
-    if not is_valid:
-        return None
 
     return optimized_text

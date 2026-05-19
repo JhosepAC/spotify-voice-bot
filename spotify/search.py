@@ -1,117 +1,221 @@
-from spotify.auth import get_spotify_client
+from spotify.auth import (
+    get_spotify_client
+)
+
 
 sp = get_spotify_client()
 
 
-def search_track(query, limit=1):
+SEARCH_LIMIT = 10
+
+
+def safe_search(query, search_type, limit):
     """
-    Search for a Spotify track.
-
-    Args:
-        query (str): track name
-        limit (int): max results
-
-    Returns:
-        list[dict]
+    Safe Spotify search wrapper.
     """
 
-    results = sp.search(
-        q=query,
-        type="track",
-        limit=limit
+    try:
+
+        results = sp.search(
+            q=query,
+            type=search_type,
+            limit=limit
+        )
+
+        if not results:
+            return {}
+
+        return results
+
+    except Exception as error:
+
+        print(
+            f"Spotify Search Error: {error}"
+        )
+
+        return {}
+
+
+def search_track(query, limit=SEARCH_LIMIT):
+    """
+    Search Spotify tracks.
+    """
+
+    results = safe_search(
+        query,
+        "track",
+        limit
     )
 
-    tracks = results["tracks"]["items"]
+    tracks = (
+        results.get(
+            "tracks",
+            {}
+        ).get(
+            "items",
+            []
+        )
+    )
 
     return [
         {
             "id": track.get("id"),
+
             "name": track.get("name"),
+
             "artist": (
-                track.get("artists", [{}])[0].get("name")
+                track.get(
+                    "artists",
+                    [{}]
+                )[0].get("name")
             ),
+
             "album": (
-                track.get("album", {}).get("name")
+                track.get(
+                    "album",
+                    {}
+                ).get("name")
             ),
+
             "uri": track.get("uri")
         }
+
         for track in tracks
     ]
 
 
-def search_artist(query, limit=1):
+def search_artist(query, limit=SEARCH_LIMIT):
     """
-    Search for a Spotify artist.
+    Search Spotify artists.
     """
 
-    results = sp.search(
-        q=query,
-        type="artist",
-        limit=limit
+    results = safe_search(
+        query,
+        "artist",
+        limit
     )
 
-    artists = results["artists"]["items"]
+    artists = (
+        results.get(
+            "artists",
+            {}
+        ).get(
+            "items",
+            []
+        )
+    )
 
     return [
         {
             "id": artist.get("id"),
+
             "name": artist.get("name"),
-            "genres": artist.get("genres", []),
-            "followers": artist.get("followers", {}).get("total", 0),
+
+            "genres": artist.get(
+                "genres",
+                []
+            ),
+
+            "followers": (
+                artist.get(
+                    "followers",
+                    {}
+                ).get(
+                    "total",
+                    0
+                )
+            ),
+
             "uri": artist.get("uri")
         }
+
         for artist in artists
     ]
 
 
-def search_album(query, limit=1):
+def search_album(query, limit=SEARCH_LIMIT):
     """
-    Search for a Spotify album.
+    Search Spotify albums.
     """
 
-    results = sp.search(
-        q=query,
-        type="album",
-        limit=limit
+    results = safe_search(
+        query,
+        "album",
+        limit
     )
 
-    albums = results["albums"]["items"]
+    albums = (
+        results.get(
+            "albums",
+            {}
+        ).get(
+            "items",
+            []
+        )
+    )
 
     return [
         {
             "id": album.get("id"),
+
             "name": album.get("name"),
+
             "artist": (
-                album.get("artists", [{}])[0].get("name")
+                album.get(
+                    "artists",
+                    [{}]
+                )[0].get("name")
             ),
-            "release_date": album.get("release_date"),
+
+            "release_date": album.get(
+                "release_date"
+            ),
+
             "uri": album.get("uri")
         }
+
         for album in albums
     ]
 
 
-def search_playlist(query, limit=1):
+def search_playlist(query, limit=SEARCH_LIMIT):
     """
-    Search for a Spotify playlist.
+    Search Spotify playlists.
     """
 
-    results = sp.search(
-        q=query,
-        type="playlist",
-        limit=limit
+    results = safe_search(
+        query,
+        "playlist",
+        limit
     )
 
-    playlists = results["playlists"]["items"]
+    playlists = (
+        results.get(
+            "playlists",
+            {}
+        ).get(
+            "items",
+            []
+        )
+    )
 
     return [
         {
             "id": playlist.get("id"),
+
             "name": playlist.get("name"),
+
             "owner": (
-                playlist.get("owner", {}).get("display_name")
+                playlist.get(
+                    "owner",
+                    {}
+                ).get(
+                    "display_name"
+                )
             ),
+
             "uri": playlist.get("uri")
         }
+
         for playlist in playlists
     ]
