@@ -1,27 +1,28 @@
 import tempfile
 
 import sounddevice as sd
-
-from scipy.io.wavfile import write
-
-
-SAMPLE_RATE = 44100
-
-DURATION = 5
+import soundfile as sf
 
 
-def record_audio():
+SAMPLE_RATE = 16000
+
+CHANNELS = 1
+
+DTYPE = "float32"
+
+
+def record_audio(duration=5):
     """
-    Record command audio.
+    Record microphone audio.
     """
 
-    print("Listening command...")
+    print("Listening...")
 
     recording = sd.rec(
-        int(DURATION * SAMPLE_RATE),
+        int(duration * SAMPLE_RATE),
         samplerate=SAMPLE_RATE,
-        channels=1,
-        dtype="int16"
+        channels=CHANNELS,
+        dtype=DTYPE
     )
 
     sd.wait()
@@ -31,10 +32,10 @@ def record_audio():
         delete=False
     )
 
-    write(
+    sf.write(
         temp_file.name,
-        SAMPLE_RATE,
-        recording
+        recording,
+        SAMPLE_RATE
     )
 
     return temp_file.name

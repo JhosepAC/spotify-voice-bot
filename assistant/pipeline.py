@@ -1,71 +1,45 @@
-from wakeword.listener import (
-    wait_for_wake_word
+from voice.command_listener import (
+    listen_command
+)
+from voice.tts_engine import (
+    speak
 )
 
-from voice.listener import (
-    record_audio
+from nlp.command_builder import (
+    build_command
 )
-
-from voice.whisper_engine import (
-    transcribe_audio
-)
-
-from voice.speaker import speak
-
-from commands.parser import (
-    parse_command
-)
-
 from commands.router import (
     route_command
 )
 
-
 def run_voice_assistant():
-
+    """
+    Main voice assistant loop.
+    """
     while True:
-
-        wait_for_wake_word()
-
-        speak("Yes?")
-
         try:
-
-            audio_file = record_audio()
-
-            text = transcribe_audio(
-                audio_file
-            )
+            text = listen_command(duration=6)
 
             if not text:
-
-                speak(
-                    "I could not understand"
-                )
-
                 continue
 
-            print(f"User: {text}")
+            print(f"Detected: {text}")
 
-            parsed_command = parse_command(
-                text
-            )
+            parsed_command = build_command(text)
 
-            response = route_command(
-                parsed_command["intent"],
-                parsed_command["entities"]
-            )
+            intent = parsed_command.get("intent")
+            entities = parsed_command.get("entities")
 
-            print(
-                f"Assistant: {response}"
-            )
+            if not intent:
+                speak("I could not understand")
+                continue
+
+            response = route_command(intent, entities)
+
+            print(f"Assistant: {response}")
 
             speak(response)
 
         except Exception as error:
-
-            print(error)
-
-            speak(
-                "An error occurred"
-            )
+            print(f"Pipeline Error: {error}")
+            speak("An error occurred")
