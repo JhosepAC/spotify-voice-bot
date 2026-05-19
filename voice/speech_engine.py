@@ -1,6 +1,6 @@
-from typing import cast
-
-import whisper
+from faster_whisper import (
+    WhisperModel
+)
 
 from voice.audio_enhancer import (
     enhance_audio
@@ -8,14 +8,17 @@ from voice.audio_enhancer import (
 
 
 print(
-    "Loading Whisper model..."
+    "Loading Faster Whisper model..."
 )
 
 
-model = whisper.load_model(
-    "small"
-)
+model = WhisperModel(
+    "base",
 
+    device="cpu",
+
+    compute_type="int8"
+)
 
 
 def transcribe_audio(audio_path):
@@ -27,23 +30,20 @@ def transcribe_audio(audio_path):
         audio_path
     )
 
-    result = model.transcribe(
+    segments, _ = model.transcribe(
         enhanced_audio,
-
-        fp16=False,
-
-        temperature=0,
 
         beam_size=5,
 
-        best_of=5,
-
-        language="es"
+        vad_filter=True
     )
 
-    text = cast(
-        str,
-        result["text"]
-    )
+    text = ""
+
+    for segment in segments:
+
+        text += (
+            segment.text + " "
+        )
 
     return text.strip()

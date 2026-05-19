@@ -1,14 +1,13 @@
 import tempfile
 
 import sounddevice as sd
+
 import soundfile as sf
+
+import numpy as np
 
 
 SAMPLE_RATE = 16000
-
-CHANNELS = 1
-
-DTYPE = "float32"
 
 
 def record_audio(duration=5):
@@ -20,12 +19,17 @@ def record_audio(duration=5):
 
     recording = sd.rec(
         int(duration * SAMPLE_RATE),
+
         samplerate=SAMPLE_RATE,
-        channels=CHANNELS,
-        dtype=DTYPE
+
+        channels=1,
+
+        dtype="float32"
     )
 
     sd.wait()
+
+    recording = np.squeeze(recording)
 
     temp_file = tempfile.NamedTemporaryFile(
         suffix=".wav",

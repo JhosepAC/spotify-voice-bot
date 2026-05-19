@@ -1,32 +1,11 @@
-from voice.audio_capture import (
-    record_audio
-)
-
-from voice.speech_engine import (
-    transcribe_audio
-)
-
-from voice.transcript_optimizer import (
-    optimize_transcript
+from voice.realtime_listener import (
+    listen_realtime
 )
 
 
-
-def listen_command(duration=6):
+def listen_command():
     """
-    Listen and process command.
+    Listen user command.
     """
 
-    audio_file = record_audio(
-        duration=duration
-    )
-
-    transcript = transcribe_audio(
-        audio_file
-    )
-
-    optimized_text = optimize_transcript(
-        transcript
-    )
-
-    return optimized_text
+    return listen_realtime()

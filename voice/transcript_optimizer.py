@@ -1,20 +1,19 @@
 import re
 
 
-COMMON_STRUCTURAL_FIXES = {
+COMMON_FIXES = {
 
     "spotifai": "spotify",
 
     "spoty": "spotify",
 
-    "spotifye": "spotify"
+    "spotyfy": "spotify"
 }
-
 
 
 def optimize_transcript(text):
     """
-    Optimize transcript structure.
+    Optimize transcript text.
     """
 
     text = text.lower()
@@ -32,7 +31,7 @@ def optimize_transcript(text):
     )
 
     for wrong, correct in (
-        COMMON_STRUCTURAL_FIXES.items()
+        COMMON_FIXES.items()
     ):
 
         text = text.replace(
