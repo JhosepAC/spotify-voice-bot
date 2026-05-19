@@ -1,15 +1,17 @@
-import webrtcvad
+import numpy as np
+
+from voice.audio_config import (
+    SILENCE_THRESHOLD
+)
 
 
-vad = webrtcvad.Vad(2)
-
-
-def is_speech(audio_bytes, sample_rate=16000):
+def is_speech(audio_chunk):
     """
-    Detect speech.
+    Detect if chunk contains speech.
     """
 
-    return vad.is_speech(
-        audio_bytes,
-        sample_rate
+    energy = np.linalg.norm(
+        audio_chunk
     )
+
+    return energy > SILENCE_THRESHOLD

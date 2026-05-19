@@ -2,64 +2,54 @@ from voice.command_listener import (
     listen_command
 )
 
-from voice.tts_engine import (
-    speak
-)
-
 from nlp.command_builder import (
     build_command
+)
+
+from memory.memory_updater import (
+    process_memory
 )
 
 from commands.router import (
     route_command
 )
 
+# AJUSTA ESTA RUTA
+from voice.tts import speak
+
 
 def run_voice_assistant():
-    """
-    Main realtime assistant loop.
-    """
-
-    speak(
-        "Spotify assistant initialized"
-    )
 
     while True:
 
         try:
 
-            text = listen_command()
+            command_text = (
+                listen_command()
+            )
 
-            if not text:
+            if not command_text:
+
                 continue
 
             print(
-                f"Detected: {text}"
+                f"User: {command_text}"
             )
 
-            parsed_command = build_command(
-                text
+            parsed = build_command(
+                command_text
             )
 
-            intent = parsed_command.get(
-                "intent"
+            parsed = process_memory(
+                command_text,
+                parsed
             )
-
-            entities = parsed_command.get(
-                "entities"
-            )
-
-            if not intent:
-
-                speak(
-                    "I could not understand"
-                )
-
-                continue
 
             response = route_command(
-                intent,
-                entities
+
+                parsed["intent"],
+
+                parsed["entities"]
             )
 
             print(
@@ -70,9 +60,7 @@ def run_voice_assistant():
 
         except Exception as error:
 
-            print(
-                f"Pipeline Error: {error}"
-            )
+            print(error)
 
             speak(
                 "An error occurred"

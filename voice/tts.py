@@ -5,7 +5,12 @@ engine = pyttsx3.init()
 
 engine.setProperty(
     "rate",
-    170
+    175
+)
+
+engine.setProperty(
+    "volume",
+    1.0
 )
 
 
@@ -14,7 +19,7 @@ def speak(text):
     Convert text to speech.
     """
 
-    print(f"Assistant: {text}")
+    print(f"TTS: {text}")
 
     engine.say(text)
 

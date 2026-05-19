@@ -1,11 +1,24 @@
-from voice.realtime_listener import (
-    listen_realtime
+from voice.streaming_listener import (
+    StreamingListener
 )
+
+from voice.whisper_engine import (
+    transcribe_audio
+)
+
+
+listener = StreamingListener()
 
 
 def listen_command():
     """
-    Listen user command.
+    Listen and transcribe command.
     """
 
-    return listen_realtime()
+    audio = listener.listen()
+
+    text = transcribe_audio(
+        audio
+    )
+
+    return text
