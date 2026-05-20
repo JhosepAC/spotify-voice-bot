@@ -3,6 +3,7 @@ from commands.intents import (
     PAUSE,
     RESUME,
     NEXT_TRACK,
+    PREVIOUS_TRACK,
     LIKE_SONG
 )
 
@@ -11,21 +12,32 @@ from nlp.semantic_patterns import (
     PAUSE_PATTERNS,
     RESUME_PATTERNS,
     NEXT_PATTERNS,
+    PREVIOUS_PATTERNS,
     LIKE_PATTERNS
 )
 
-def contains_pattern(text, patterns):
 
-    for pattern in patterns:
+def contains_pattern(
+    text,
+    patterns
+):
+    """
+    Flexible semantic pattern matching.
+    """
 
-        if pattern in text:
-            return True
+    text = text.lower()
 
-    return False
+    return any(
+
+        pattern in text
+
+        for pattern in patterns
+    )
+
 
 def classify_intent(text):
     """
-    Detect semantic intent.
+    Semantic intent classifier.
     """
 
     text = text.lower()
@@ -53,6 +65,12 @@ def classify_intent(text):
         NEXT_PATTERNS
     ):
         return NEXT_TRACK
+
+    if contains_pattern(
+        text,
+        PREVIOUS_PATTERNS
+    ):
+        return PREVIOUS_TRACK
 
     if contains_pattern(
         text,
