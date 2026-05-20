@@ -1,10 +1,16 @@
+import numpy as np
+
+
 class AudioBuffer:
 
     def __init__(self):
 
         self.frames = []
 
-    def add(self, chunk):
+    def add(
+        self,
+        chunk: np.ndarray
+    ):
         """
         Add audio chunk.
         """
@@ -16,11 +22,20 @@ class AudioBuffer:
         Clear buffer.
         """
 
-        self.frames = []
+        self.frames.clear()
 
     def get_audio(self):
         """
-        Get complete audio.
+        Return merged audio buffer.
         """
 
-        return self.frames
+        if len(self.frames) == 0:
+
+            return np.array(
+                [],
+                dtype=np.float32
+            )
+
+        return np.concatenate(
+            self.frames
+        ).astype(np.float32)
