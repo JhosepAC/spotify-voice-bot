@@ -1,32 +1,50 @@
-from voice.audio_capture import (
-    record_audio
+from voice.streaming_listener import (
+    StreamingListener
 )
 
-from voice.speech_engine import (
-    transcribe_audio
-)
-
-from voice.transcript_optimizer import (
-    optimize_transcript
+from voice.incremental_transcriber import (
+    IncrementalTranscriber
 )
 
 
+listener = StreamingListener()
 
-def listen_command(duration=6):
+transcriber = (
+    IncrementalTranscriber()
+)
+
+
+def listen_command():
     """
-    Listen and process command.
+    Incremental realtime listening.
     """
 
-    audio_file = record_audio(
-        duration=duration
+    print(
+        "Listening realtime..."
     )
 
-    transcript = transcribe_audio(
-        audio_file
+    audio = listener.listen()
+
+    if len(audio) == 0:
+
+        return ""
+
+    transcriber.add_audio(
+        audio
     )
 
-    optimized_text = optimize_transcript(
-        transcript
+    partial = (
+        transcriber.get_partial_transcription()
     )
 
-    return optimized_text
+    if partial:
+
+        print(
+            f"PARTIAL: {partial}"
+        )
+
+    final_text = (
+        transcriber.finalize()
+    )
+
+    return final_text

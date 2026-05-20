@@ -1,45 +1,67 @@
 from voice.command_listener import (
     listen_command
 )
-from voice.tts_engine import (
-    speak
-)
 
 from nlp.command_builder import (
     build_command
 )
+
+from memory.memory_updater import (
+    process_memory
+)
+
 from commands.router import (
     route_command
 )
 
+# AJUSTA ESTA RUTA
+from voice.tts import speak
+
+
 def run_voice_assistant():
-    """
-    Main voice assistant loop.
-    """
+
     while True:
+
         try:
-            text = listen_command(duration=6)
 
-            if not text:
+            command_text = (
+                listen_command()
+            )
+
+            if not command_text:
+
                 continue
 
-            print(f"Detected: {text}")
+            print(
+                f"User: {command_text}"
+            )
 
-            parsed_command = build_command(text)
+            parsed = build_command(
+                command_text
+            )
 
-            intent = parsed_command.get("intent")
-            entities = parsed_command.get("entities")
+            parsed = process_memory(
+                command_text,
+                parsed
+            )
 
-            if not intent:
-                speak("I could not understand")
-                continue
+            response = route_command(
 
-            response = route_command(intent, entities)
+                parsed["intent"],
 
-            print(f"Assistant: {response}")
+                parsed["entities"]
+            )
+
+            print(
+                f"Assistant: {response}"
+            )
 
             speak(response)
 
         except Exception as error:
-            print(f"Pipeline Error: {error}")
-            speak("An error occurred")
+
+            print(error)
+
+            speak(
+                "An error occurred"
+            )
