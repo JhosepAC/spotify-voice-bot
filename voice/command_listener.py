@@ -2,33 +2,49 @@ from voice.streaming_listener import (
     StreamingListener
 )
 
-from voice.audio_preprocessor import (
-    AudioPreprocessor
-)
-
-from voice.whisper_engine import (
-    transcribe_audio
+from voice.incremental_transcriber import (
+    IncrementalTranscriber
 )
 
 
 listener = StreamingListener()
 
-preprocessor = AudioPreprocessor()
+transcriber = (
+    IncrementalTranscriber()
+)
 
 
 def listen_command():
     """
-    Listen and transcribe command.
+    Incremental realtime listening.
     """
+
+    print(
+        "Listening realtime..."
+    )
 
     audio = listener.listen()
 
-    processed_audio = (
-        preprocessor.process(audio)
+    if len(audio) == 0:
+
+        return ""
+
+    transcriber.add_audio(
+        audio
     )
 
-    text = transcribe_audio(
-        processed_audio
+    partial = (
+        transcriber.get_partial_transcription()
     )
 
-    return text
+    if partial:
+
+        print(
+            f"PARTIAL: {partial}"
+        )
+
+    final_text = (
+        transcriber.finalize()
+    )
+
+    return final_text
