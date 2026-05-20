@@ -10,6 +10,9 @@ from voice.transcript_optimizer import (
     optimize_transcript
 )
 
+from utils.file_manager import safe_remove
+import os
+
 
 
 def listen_command(duration=6):
@@ -21,12 +24,19 @@ def listen_command(duration=6):
         duration=duration
     )
 
-    transcript = transcribe_audio(
-        audio_file
-    )
+    try:
+        transcript = transcribe_audio(
+            audio_file
+        )
 
-    optimized_text = optimize_transcript(
-        transcript
-    )
-
-    return optimized_text
+        optimized_text = optimize_transcript(
+            transcript
+        )
+        
+        return optimized_text
+    
+    finally:
+        # Limpieza: eliminamos el original y el mejorado si existe
+        safe_remove(audio_file)
+        enhanced_path = audio_file.replace(".wav", "_enhanced.wav")
+        safe_remove(enhanced_path)
