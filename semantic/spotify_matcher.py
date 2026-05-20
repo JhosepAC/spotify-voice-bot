@@ -1,8 +1,6 @@
 from spotify.search import (
     search_track,
-    search_artist,
-    search_album,
-    search_playlist
+    search_artist
 )
 
 from semantic.fuzzy_matcher import (
@@ -10,55 +8,45 @@ from semantic.fuzzy_matcher import (
 )
 
 
-
-def resolve_track(track_name):
+def resolve_track_name(
+    query
+):
     """
-    Resolve Spotify track.
+    Resolve best Spotify track.
     """
 
-    results = search_track(track_name)
-
-    if not results:
-        return track_name
-
-    candidates = [
-        track["name"]
-        for track in results
-    ]
+    candidates = search_track(
+        query,
+        limit=10
+    )
 
     best_match = find_best_match(
-        track_name,
+
+        query,
+
         candidates
     )
 
-    if best_match:
-        return best_match
-
-    return candidates[0]
+    return best_match
 
 
-
-def resolve_artist(artist_name):
+def resolve_artist_name(
+    query
+):
     """
-    Resolve Spotify artist.
+    Resolve best Spotify artist.
     """
 
-    results = search_artist(artist_name)
-
-    if not results:
-        return artist_name
-
-    candidates = [
-        artist["name"]
-        for artist in results
-    ]
+    candidates = search_artist(
+        query,
+        limit=10
+    )
 
     best_match = find_best_match(
-        artist_name,
+
+        query,
+
         candidates
     )
 
-    if best_match:
-        return best_match
-
-    return candidates[0]
+    return best_match

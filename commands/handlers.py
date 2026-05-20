@@ -1,133 +1,189 @@
+import context.state as state
+
 from spotify.player import (
+    play_track,
     pause_playback,
     resume_playback,
     next_track,
     previous_track
 )
 
-from spotify.playback import (
-    play_track,
-    play_artist,
-    play_album,
-    play_playlist
+from spotify.like import (
+    like_current_song
 )
 
-from spotify.library import (
-    like_current_track
+from semantic.command_corrector import (
+    correct_track_command,
+    correct_artist_command
 )
 
-from context.manager import (
-    get_context
-)
 
-from utils.response_manager import response_manager
+def handle_play_track(
+    track_name
+):
+    """
+    Play Spotify track.
+    """
 
+    corrected_track = (
+        correct_track_command(
+            track_name
+        )
+    )
 
-def handle_play_artist(artist_name):
+    if corrected_track is None:
 
-    artist = play_artist(artist_name)
+        return (
+            "I could not find that track"
+        )
 
-    if not artist:
-        return response_manager.get_response("NOT_FOUND")
+    play_track(
+        corrected_track
+    )
 
-    return response_manager.get_response(
-        "PLAY_ARTIST", 
-        artist_name=artist["name"]
+    return (
+        f"Playing {corrected_track}"
     )
 
 
-def handle_play_album(album_name):
+def handle_play_artist(
+    artist_name
+):
+    """
+    Handle artist playback.
+    """
 
-    album = play_album(album_name)
+    corrected_artist = (
+        correct_artist_command(
+            artist_name
+        )
+    )
 
-    if not album:
-        return response_manager.get_response("NOT_FOUND")
+    if corrected_artist is None:
 
-    return response_manager.get_response(
-        "PLAY_TRACK", # Usamos una genérica o podríamos añadir PLAY_ALBUM
-        track_name=album["name"],
-        artist_name=""
+        return (
+            "I could not find that artist"
+        )
+
+    play_track(
+        corrected_artist
+    )
+
+    return (
+        f"Playing music from {corrected_artist}"
     )
 
 
-def handle_play_playlist(playlist_name):
+def handle_play_album(
+    album_name
+):
+    """
+    Handle album playback.
+    """
 
-    playlist = play_playlist(playlist_name)
+    if not album_name:
 
-    if not playlist:
-        return response_manager.get_response("NOT_FOUND")
+        return (
+            "Album name missing"
+        )
 
-    return f'Playing playlist {playlist["name"]}' # Pendiente añadir a JSON
+    play_track(
+        album_name
+    )
+
+    return (
+        f"Playing album {album_name}"
+    )
+
+
+def handle_play_playlist(
+    playlist_name
+):
+    """
+    Handle playlist playback.
+    """
+
+    if not playlist_name:
+
+        return (
+            "Playlist name missing"
+        )
+
+    play_track(
+        playlist_name
+    )
+
+    return (
+        f"Playing playlist {playlist_name}"
+    )
+
+
+def handle_repeat_last():
+    """
+    Repeat last contextual command.
+    """
+
+    if state.LAST_TRACK:
+
+        return handle_play_track(
+            state.LAST_TRACK
+        )
+
+    if state.LAST_ARTIST:
+
+        return handle_play_artist(
+            state.LAST_ARTIST
+        )
+
+    if state.LAST_ALBUM:
+
+        return handle_play_album(
+            state.LAST_ALBUM
+        )
+
+    if state.LAST_PLAYLIST:
+
+        return handle_play_playlist(
+            state.LAST_PLAYLIST
+        )
+
+    return (
+        "There is nothing to repeat"
+    )
 
 
 def handle_pause():
+
     pause_playback()
-    return response_manager.get_response("PAUSE")
+
+    return "Music paused"
 
 
 def handle_resume():
+
     resume_playback()
-    return response_manager.get_response("RESUME")
 
-def handle_repeat_last():
+    return "Music resumed"
 
-    context = get_context()
-
-    if context.last_track:
-
-        return handle_play_track(
-            context.last_track
-        )
-
-    if context.last_artist:
-
-        return handle_play_artist(
-            context.last_artist
-        )
-
-    if context.last_album:
-
-        return handle_play_album(
-            context.last_album
-        )
-
-    if context.last_playlist:
-
-        return handle_play_playlist(
-            context.last_playlist
-        )
-
-    return "Nothing to repeat"
 
 def handle_next_track():
+
     next_track()
-    return response_manager.get_response("NEXT_TRACK")
+
+    return "Skipping track"
 
 
 def handle_previous_track():
+
     previous_track()
-    return response_manager.get_response("PREVIOUS_TRACK")
 
-
-def handle_play_track(track_name):
-
-    track = play_track(track_name)
-
-    if not track:
-        return response_manager.get_response("NOT_FOUND")
-
-    return response_manager.get_response(
-        "PLAY_TRACK",
-        track_name=track["name"],
-        artist_name=track["artist"]
-    )
+    return "Going back"
 
 
 def handle_like_song():
 
-    success = like_current_track()
+    like_current_song()
 
-    if not success:
-        return response_manager.get_response("ERROR_GENERAL")
-
-    return response_manager.get_response("LIKE_SONG")
+    return (
+        "Song added to favorites"
+    )

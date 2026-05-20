@@ -1,32 +1,51 @@
-from context.state import CommandContext
+import context.state as state
 
 
-_context = CommandContext()
+def update_last_intent(
+    intent
+):
+    """
+    Update last intent.
+    """
 
-def get_context():
-
-    return _context
-
-def update_last_intent(intent):
-
-    _context.last_intent = intent
-
-
-def update_last_track(track_name):
-
-    _context.last_track = track_name
+    state.LAST_INTENT = intent
 
 
-def update_last_artist(artist_name):
+def update_last_track(
+    track_name
+):
+    """
+    Update last track.
+    """
 
-    _context.last_artist = artist_name
+    state.LAST_TRACK = track_name
 
 
-def update_last_album(album_name):
+def update_last_artist(
+    artist_name
+):
+    """
+    Update last artist.
+    """
 
-    _context.last_album = album_name
+    state.LAST_ARTIST = artist_name
 
 
-def update_last_playlist(playlist_name):
+def update_last_album(
+    album_name
+):
+    """
+    Update last album.
+    """
 
-    _context.last_playlist = playlist_name
+    state.LAST_ALBUM = album_name
+
+
+def update_last_playlist(
+    playlist_name
+):
+    """
+    Update last playlist.
+    """
+
+    state.LAST_PLAYLIST = playlist_name

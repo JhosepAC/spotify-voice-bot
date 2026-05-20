@@ -1,46 +1,63 @@
-from rapidfuzz import fuzz
+from difflib import SequenceMatcher
 
 
-SIMILARITY_THRESHOLD = 65
-
-
-
-def similarity_score(text1, text2):
+def similarity_score(
+    text_a,
+    text_b
+):
     """
-    Calculate semantic similarity.
+    Calculate semantic similarity score.
     """
 
-    return fuzz.token_sort_ratio(
-        text1.lower(),
-        text2.lower()
-    )
+    return SequenceMatcher(
+
+        None,
+
+        text_a.lower(),
+
+        text_b.lower()
+
+    ).ratio()
 
 
-
-def find_best_match(query, candidates):
+def find_best_match(
+    query,
+    candidates
+):
     """
     Find best semantic candidate.
     """
 
+    if not candidates:
+
+        return None
+
     best_candidate = None
 
-    best_score = 0
+    best_score = 0.0
 
     for candidate in candidates:
 
+        candidate_name = candidate.get(
+            "name",
+            ""
+        )
+
         score = similarity_score(
+
             query,
-            candidate
+
+            candidate_name
         )
 
         if score > best_score:
 
-            best_candidate = candidate
-
             best_score = score
 
-    if best_score >= SIMILARITY_THRESHOLD:
+            best_candidate = candidate
 
-        return best_candidate
+    if best_score < 0.45:
 
-    return None
+        return None
+
+    return best_candidate

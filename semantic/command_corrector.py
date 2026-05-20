@@ -1,15 +1,44 @@
 from semantic.spotify_matcher import (
-    resolve_track
+    resolve_track_name,
+    resolve_artist_name
 )
 
 
-def correct_track_command(track_name):
+def correct_track_command(
+    track_name
+):
     """
-    Correct track name semantically.
+    Correct Spotify track name.
     """
 
-    resolved_track = resolve_track(
+    result = resolve_track_name(
         track_name
     )
 
-    return resolved_track
+    if result is None:
+
+        return None
+
+    return result.get(
+        "name"
+    )
+
+
+def correct_artist_command(
+    artist_name
+):
+    """
+    Correct Spotify artist name.
+    """
+
+    result = resolve_artist_name(
+        artist_name
+    )
+
+    if result is None:
+
+        return None
+
+    return result.get(
+        "name"
+    )

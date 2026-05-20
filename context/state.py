@@ -1,13 +1,9 @@
-class CommandContext:
+LAST_INTENT = None
 
-    def __init__(self):
+LAST_TRACK = None
 
-        self.last_intent = None
+LAST_ARTIST = None
 
-        self.last_track = None
+LAST_ALBUM = None
 
-        self.last_artist = None
-
-        self.last_album = None
-
-        self.last_playlist = None
+LAST_PLAYLIST = None
