@@ -1,3 +1,4 @@
+import collections
 import time
 
 import numpy as np
@@ -12,8 +13,17 @@ from voice.audio_config import (
     MAX_SILENCE_DURATION,
     MIN_SPEECH_DURATION,
     BASE_ENERGY_THRESHOLD,
+    DYNAMIC_ENERGY_RATIO,
+    NOISE_FLOOR_ALPHA,
+    MIN_ACTIVATION_FRAMES,
+    END_SPEECH_FRAMES,
+    PRE_SPEECH_BUFFER_SIZE,
     DEBUG_VAD,
     MAX_RECORDING_SECONDS
+)
+
+from voice.audio_preprocessor import (
+    AudioPreprocessor
 )
 
 
@@ -29,60 +39,111 @@ class StreamingListener:
 
         self.dtype = DTYPE
 
-        self.energy_threshold = (
+        self.preprocessor = (
+            AudioPreprocessor()
+        )
+
+        self.noise_floor = (
             BASE_ENERGY_THRESHOLD
         )
 
-    def calculate_audio_energy(
+    def calculate_energy(
         self,
-        audio_chunk
+        chunk
     ):
         """
-        Calculate RMS energy.
+        RMS energy.
         """
 
-        return np.sqrt(
-            np.mean(
-                np.square(audio_chunk)
+        return float(
+
+            np.sqrt(
+
+                np.mean(
+                    np.square(chunk)
+                )
             )
+        )
+
+    def update_noise_floor(
+        self,
+        energy
+    ):
+        """
+        Adaptive environment learning.
+        """
+
+        self.noise_floor = (
+
+            NOISE_FLOOR_ALPHA
+            * self.noise_floor
+
+            +
+
+            (1 - NOISE_FLOOR_ALPHA)
+            * energy
+        )
+
+    def get_dynamic_threshold(self):
+        """
+        Dynamic speech threshold.
+        """
+
+        return max(
+
+            BASE_ENERGY_THRESHOLD,
+
+            self.noise_floor
+            * DYNAMIC_ENERGY_RATIO
         )
 
     def is_speech(
         self,
-        audio_chunk
+        chunk
     ):
         """
-        Detect speech activity.
+        Adaptive speech detection.
         """
 
-        energy = self.calculate_audio_energy(
-            audio_chunk
+        energy = self.calculate_energy(
+            chunk
+        )
+
+        self.update_noise_floor(
+            energy
+        )
+
+        threshold = (
+            self.get_dynamic_threshold()
         )
 
         if DEBUG_VAD:
 
             print(
-                f"Energy: {energy:.6f}"
+                f"Energy={energy:.6f} "
+                f"Threshold={threshold:.6f}"
             )
 
-        return (
-            energy > self.energy_threshold
-        )
+        return energy > threshold
 
     def listen(self):
         """
-        Listen for realtime speech.
+        Ultra low latency streaming listener.
         """
 
-        print(
-            "Listening..."
+        print("Listening...")
+
+        audio_frames = []
+
+        pre_speech_buffer = collections.deque(
+            maxlen=PRE_SPEECH_BUFFER_SIZE
         )
 
-        audio_buffer = []
+        speech_started = False
 
-        speech_detected = False
+        activation_frames = 0
 
-        silence_start = None
+        silence_frames = 0
 
         recording_start = time.time()
 
@@ -106,77 +167,122 @@ class StreamingListener:
 
                 chunk = chunk.flatten()
 
+                chunk = (
+                    self.preprocessor.process(
+                        chunk
+                    )
+                )
+
+                if len(chunk) == 0:
+
+                    continue
+
                 current_time = time.time()
 
-                if self.is_speech(chunk):
+                speech_detected = (
+                    self.is_speech(chunk)
+                )
 
-                    if not speech_detected:
+                if not speech_started:
 
-                        speech_detected = True
+                    pre_speech_buffer.append(
+                        chunk
+                    )
 
-                        if DEBUG_VAD:
+                    if speech_detected:
 
-                            print(
-                                "Speech detected"
+                        activation_frames += 1
+
+                        if (
+                            activation_frames
+                            >= MIN_ACTIVATION_FRAMES
+                        ):
+
+                            speech_started = True
+
+                            audio_frames.extend(
+                                pre_speech_buffer
                             )
 
-                    silence_start = None
+                            if DEBUG_VAD:
 
-                    audio_buffer.extend(
+                                print(
+                                    "Speech started"
+                                )
+
+                    else:
+
+                        activation_frames = 0
+
+                else:
+
+                    audio_frames.append(
                         chunk
                     )
 
-                elif speech_detected:
+                    if speech_detected:
 
-                    audio_buffer.extend(
-                        chunk
-                    )
+                        silence_frames = 0
 
-                    if silence_start is None:
+                    else:
 
-                        silence_start = (
-                            current_time
+                        silence_frames += 1
+
+                        silence_time = (
+
+                            silence_frames
+
+                            *
+
+                            (
+                                self.chunk_size
+                                / self.sample_rate
+                            )
                         )
 
-                    silence_duration = (
-                        current_time
-                        - silence_start
-                    )
+                        if (
+                            silence_time
+                            >= MAX_SILENCE_DURATION
+                        ):
 
-                    if (
-                        silence_duration
-                        >= MAX_SILENCE_DURATION
-                    ):
+                            if DEBUG_VAD:
 
-                        break
+                                print(
+                                    "Speech ended"
+                                )
 
-                if (
+                            break
+
+                elapsed = (
                     current_time
                     - recording_start
+                )
+
+                if (
+                    elapsed
                     >= MAX_RECORDING_SECONDS
                 ):
 
                     break
 
-        if len(audio_buffer) == 0:
+        if len(audio_frames) == 0:
 
             return np.array(
                 [],
                 dtype=np.float32
             )
 
-        audio_array = np.array(
-            audio_buffer,
-            dtype=np.float32
+        audio = np.concatenate(
+            audio_frames
         )
 
-        speech_duration = (
-            len(audio_array)
+        duration = (
+            len(audio)
             / self.sample_rate
         )
 
         if (
-            speech_duration
+            duration
             < MIN_SPEECH_DURATION
         ):
 
@@ -185,4 +291,4 @@ class StreamingListener:
                 dtype=np.float32
             )
 
-        return audio_array
+        return audio

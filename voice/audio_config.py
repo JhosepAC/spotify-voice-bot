@@ -1,9 +1,6 @@
 """
 Realtime audio configuration.
-Optimized for:
-- Faster Whisper
-- Low latency
-- Streaming speech recognition
+Ultra optimized low latency voice engine.
 """
 
 
@@ -22,7 +19,7 @@ DTYPE = "float32"
 # STREAMING
 # =========================
 
-CHUNK_DURATION_MS = 30
+CHUNK_DURATION_MS = 20
 
 CHUNK_SIZE = int(
     SAMPLE_RATE * CHUNK_DURATION_MS / 1000
@@ -33,40 +30,35 @@ CHUNK_SIZE = int(
 # SPEECH DETECTION
 # =========================
 
-MIN_SPEECH_DURATION = 0.30
+MIN_SPEECH_DURATION = 0.20
 
-MAX_SILENCE_DURATION = 1.0
+MAX_SILENCE_DURATION = 0.45
 
-PRE_SPEECH_BUFFER = 0.5
+MIN_ACTIVATION_FRAMES = 3
 
+END_SPEECH_FRAMES = 8
 
-# =========================
-# ENERGY THRESHOLDS
-# =========================
-
-BASE_ENERGY_THRESHOLD = 0.015
-
-DYNAMIC_THRESHOLD_MULTIPLIER = 1.5
+PRE_SPEECH_BUFFER_SIZE = 12
 
 
 # =========================
-# AUDIO NORMALIZATION
+# ENERGY
 # =========================
 
-ENABLE_NORMALIZATION = True
+BASE_ENERGY_THRESHOLD = 0.008
 
-ENABLE_NOISE_REDUCTION = True
+DYNAMIC_ENERGY_RATIO = 1.5
 
-ENABLE_GAIN_CONTROL = True
+NOISE_FLOOR_ALPHA = 0.95
 
 
 # =========================
-# REALTIME PERFORMANCE
+# REALTIME
 # =========================
 
 LOW_LATENCY_MODE = True
 
-MAX_RECORDING_SECONDS = 12
+MAX_RECORDING_SECONDS = 8
 
 
 # =========================

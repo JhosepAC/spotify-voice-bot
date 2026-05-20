@@ -1,6 +1,4 @@
-import tempfile
-
-import soundfile as sf
+import numpy as np
 
 from faster_whisper import (
     WhisperModel
@@ -34,68 +32,69 @@ model = WhisperModel(
 )
 
 
-def transcribe_audio(audio_data):
+def transcribe_audio(
+    audio_data: np.ndarray
+):
     """
-    Optimized realtime transcription.
+    Zero-disk realtime transcription.
     """
 
     if audio_data is None:
+
         return ""
 
     if len(audio_data) == 0:
+
         return ""
 
-    with tempfile.NamedTemporaryFile(
+    audio_data = audio_data.astype(
+        np.float32
+    )
 
-        suffix=".wav",
+    max_value = np.max(
+        np.abs(audio_data)
+    )
 
-        delete=False
+    if max_value > 1.0:
 
-    ) as temp_audio:
-
-        sf.write(
-
-            temp_audio.name,
-
-            audio_data,
-
-            16000
+        audio_data = (
+            audio_data / max_value
         )
 
-        segments, _ = model.transcribe(
+    segments, _ = model.transcribe(
 
-            temp_audio.name,
+        audio_data,
 
-            language=WHISPER_LANGUAGE,
+        language=WHISPER_LANGUAGE,
 
-            beam_size=WHISPER_BEAM_SIZE,
+        beam_size=WHISPER_BEAM_SIZE,
 
-            best_of=WHISPER_BEST_OF,
+        best_of=WHISPER_BEST_OF,
 
-            temperature=WHISPER_TEMPERATURE,
+        temperature=WHISPER_TEMPERATURE,
 
-            vad_filter=True,
+        vad_filter=False,
 
-            word_timestamps=False,
+        word_timestamps=False,
 
-            condition_on_previous_text=False,
+        condition_on_previous_text=False,
 
-            compression_ratio_threshold=2.4,
+        compression_ratio_threshold=2.4,
 
-            no_speech_threshold=0.5
+        no_speech_threshold=0.5
+    )
+
+    text = " ".join(
+
+        segment.text
+
+        for segment in segments
+    ).strip()
+
+    if DEBUG_TRANSCRIPTION:
+
+        print(
+            f"TRANSCRIBED: {text}"
         )
 
-        text = " ".join(
-
-            segment.text
-
-            for segment in segments
-        ).strip()
-
-        if DEBUG_TRANSCRIPTION:
-
-            print(
-                f"TRANSCRIBED: {text}"
-            )
-
-        return text
+    return text

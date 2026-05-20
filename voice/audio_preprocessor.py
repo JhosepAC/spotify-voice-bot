@@ -1,18 +1,21 @@
 import numpy as np
+
 import scipy.signal
+
 from typing import cast
 
 from voice.audio_config import (
-    SAMPLE_RATE,
-    ENABLE_NORMALIZATION,
-    ENABLE_NOISE_REDUCTION
+    SAMPLE_RATE
 )
 
 
 class AudioPreprocessor:
     """
-    Optimized preprocessing pipeline
-    for realtime Whisper.
+    Ultra lightweight realtime audio preprocessor.
+    Optimized for:
+    - low latency
+    - Whisper
+    - realtime streaming
     """
 
     def __init__(self):
@@ -42,12 +45,8 @@ class AudioPreprocessor:
         audio: np.ndarray
     ) -> np.ndarray:
         """
-        Safe normalization.
+        Lightweight normalization.
         """
-
-        if not ENABLE_NORMALIZATION:
-
-            return audio
 
         peak = np.max(
             np.abs(audio)
@@ -58,7 +57,7 @@ class AudioPreprocessor:
             return audio
 
         gain = min(
-            1.5,
+            1.2,
             1.0 / peak
         )
 
@@ -69,69 +68,31 @@ class AudioPreprocessor:
         audio: np.ndarray
     ) -> np.ndarray:
         """
-        Basic noise reduction.
+        Minimal realtime noise reduction.
         """
 
-        if not ENABLE_NOISE_REDUCTION:
-            return audio
-
         if len(audio) < 32:
+
             return audio
 
         filtered = scipy.signal.sosfilt(
+
             self.sos,
+
             audio
         )
 
-        return cast(np.ndarray, filtered)
-
-    def trim_silence(
-        self,
-        audio: np.ndarray,
-        threshold: float = 0.01
-    ) -> np.ndarray:
-        """
-        Adaptive silence trimming.
-        """
-
-        if len(audio) == 0:
-
-            return audio
-
-        abs_audio = np.abs(audio)
-
-        dynamic_threshold = max(
-
-            threshold,
-
-            np.mean(abs_audio) * 2
+        return cast(
+            np.ndarray,
+            filtered
         )
-
-        indices = np.where(
-            abs_audio > dynamic_threshold
-        )[0]
-
-        if len(indices) == 0:
-
-            return np.array(
-                [],
-                dtype=np.float32
-            )
-
-        start = indices[0]
-
-        end = indices[-1]
-
-        return audio[
-            start:end + 1
-        ]
 
     def process(
         self,
         audio: np.ndarray
     ) -> np.ndarray:
         """
-        Full preprocessing pipeline.
+        Fast realtime preprocessing pipeline.
         """
 
         if (
@@ -148,15 +109,19 @@ class AudioPreprocessor:
             np.float32
         )
 
+        # -------------------------
+        # LIGHT NORMALIZATION
+        # -------------------------
+
         audio = self.normalize(
             audio
         )
 
-        audio = self.reduce_noise(
-            audio
-        )
+        # -------------------------
+        # LIGHT NOISE FILTER
+        # -------------------------
 
-        audio = self.trim_silence(
+        audio = self.reduce_noise(
             audio
         )
 
