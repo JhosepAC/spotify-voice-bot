@@ -3,11 +3,7 @@ from nlp.intent_classifier import (
 )
 
 from nlp.entity_extractor import (
-    extract_track_name
-)
-
-from commands.intents import (
-    PLAY_TRACK
+    extract_entities
 )
 
 
@@ -20,13 +16,12 @@ def build_command(text):
         text
     )
 
-    entities = {}
+    entities = extract_entities(
 
-    if intent == PLAY_TRACK:
+        text,
 
-        entities["track_name"] = (
-            extract_track_name(text)
-        )
+        intent
+    )
 
     return {
         "intent": intent,

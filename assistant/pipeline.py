@@ -2,27 +2,35 @@ from voice.command_listener import (
     listen_command
 )
 
-from nlp.command_builder import (
-    build_command
+from voice.tts import (
+    speak
 )
 
-from memory.memory_updater import (
-    process_memory
+from nlp.command_builder import (
+    build_command
 )
 
 from commands.router import (
     route_command
 )
 
-# AJUSTA ESTA RUTA
-from voice.tts import speak
-
 
 def run_voice_assistant():
+    """
+    Main realtime assistant loop.
+    """
+
+    print(
+        "\nSpotify Voice Assistant Ready\n"
+    )
 
     while True:
 
         try:
+
+            print(
+                "\nListening..."
+            )
 
             command_text = (
                 listen_command()
@@ -33,34 +41,58 @@ def run_voice_assistant():
                 continue
 
             print(
-                f"User: {command_text}"
+                f"\nUSER: {command_text}"
             )
 
             parsed = build_command(
                 command_text
             )
 
-            parsed = process_memory(
-                command_text,
-                parsed
+            print(
+                f"\nPARSED: {parsed}"
             )
+
+            intent = parsed.get(
+                "intent"
+            )
+
+            entities = parsed.get(
+                "entities",
+                {}
+            )
+
+            if intent is None:
+
+                response = (
+                    "I could not understand the command"
+                )
+
+                print(
+                    f"\nASSISTANT: {response}"
+                )
+
+                speak(response)
+
+                continue
 
             response = route_command(
 
-                parsed["intent"],
+                intent,
 
-                parsed["entities"]
+                entities
             )
 
             print(
-                f"Assistant: {response}"
+                f"\nASSISTANT: {response}"
             )
 
             speak(response)
 
         except Exception as error:
 
-            print(error)
+            print(
+                f"\nERROR: {error}"
+            )
 
             speak(
                 "An error occurred"

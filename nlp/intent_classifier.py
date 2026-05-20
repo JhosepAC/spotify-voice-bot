@@ -1,5 +1,6 @@
 from commands.intents import (
     PLAY_TRACK,
+    PLAY_ARTIST,
     PAUSE,
     RESUME,
     NEXT_TRACK,
@@ -8,7 +9,7 @@ from commands.intents import (
 )
 
 from nlp.semantic_patterns import (
-    PLAY_PATTERNS,
+    ARTIST_PATTERNS,
     PAUSE_PATTERNS,
     RESUME_PATTERNS,
     NEXT_PATTERNS,
@@ -22,10 +23,8 @@ def contains_pattern(
     patterns
 ):
     """
-    Flexible semantic pattern matching.
+    Semantic pattern detection.
     """
-
-    text = text.lower()
 
     return any(
 
@@ -37,16 +36,16 @@ def contains_pattern(
 
 def classify_intent(text):
     """
-    Semantic intent classifier.
+    Semantic intent classification.
     """
 
     text = text.lower()
 
     if contains_pattern(
         text,
-        PLAY_PATTERNS
+        ARTIST_PATTERNS
     ):
-        return PLAY_TRACK
+        return PLAY_ARTIST
 
     if contains_pattern(
         text,
@@ -78,4 +77,4 @@ def classify_intent(text):
     ):
         return LIKE_SONG
 
-    return None
+    return PLAY_TRACK

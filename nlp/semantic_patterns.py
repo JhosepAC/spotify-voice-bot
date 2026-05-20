@@ -1,18 +1,22 @@
-PLAY_PATTERNS = [
+PLAY_TRACK_PATTERNS = [
 
     "pon",
     "reproduce",
-    "quiero escuchar",
-    "escuchar",
-    "pon música",
-    "pon una canción",
-    "quiero música",
     "toca",
-    "play",
-    "pon algo de",
-    "reproduce algo de",
+    "quiero escuchar",
     "quiero oír",
-    "pon temas de"
+    "escuchar"
+]
+
+
+ARTIST_PATTERNS = [
+
+    "música de",
+    "algo de",
+    "canciones de",
+    "temas de",
+    "artista",
+    "de"
 ]
 
 
@@ -22,7 +26,6 @@ PAUSE_PATTERNS = [
     "detén",
     "detener",
     "stop",
-    "para la música",
     "silencio"
 ]
 
@@ -31,19 +34,16 @@ RESUME_PATTERNS = [
 
     "reanuda",
     "continúa",
-    "seguir",
     "resume",
-    "continua la música"
+    "seguir"
 ]
 
 
 NEXT_PATTERNS = [
 
     "siguiente",
-    "next",
     "otra",
-    "cambia",
-    "otra canción",
+    "next",
     "skip"
 ]
 
@@ -52,17 +52,13 @@ PREVIOUS_PATTERNS = [
 
     "anterior",
     "previa",
-    "previous",
-    "regresa",
-    "vuelve"
+    "regresa"
 ]
 
 
 LIKE_PATTERNS = [
 
     "me gusta",
-    "guarda esta canción",
-    "like",
     "favorita",
-    "añade a favoritos"
+    "guarda esta canción"
 ]
