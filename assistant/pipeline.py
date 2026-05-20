@@ -4,6 +4,7 @@ from voice.command_listener import (
 from voice.tts_engine import (
     speak
 )
+from voice.wake_word import WakeWordDetector
 
 from nlp.command_builder import (
     build_command
@@ -14,31 +15,39 @@ from commands.router import (
 
 def run_voice_assistant():
     """
-    Main voice assistant loop.
+    Main voice assistant loop with Wake Word activation.
     """
+    # Inicializar detector (por defecto alexa, se puede cambiar a hey_jarvis)
+    wake_detector = WakeWordDetector(model_name="alexa")
+    
     while True:
         try:
-            text = listen_command(duration=6)
+            # Fase 1: Esperar palabra de activación
+            if wake_detector.listen_for_wake_word():
+                print("Wake word detected! Listening for command...")
+                # Opcional: Sonido de feedback o mensaje corto
+                # speak("¿Dime?") 
 
-            if not text:
-                continue
+                # Fase 2: Escuchar el comando de Spotify
+                text = listen_command(duration=6)
 
-            print(f"Detected: {text}")
+                if not text:
+                    continue
 
-            parsed_command = build_command(text)
+                print(f"Detected: {text}")
 
-            intent = parsed_command.get("intent")
-            entities = parsed_command.get("entities")
+                parsed_command = build_command(text)
 
-            if not intent:
-                speak("I could not understand")
-                continue
+                intent = parsed_command.get("intent")
+                entities = parsed_command.get("entities")
 
-            response = route_command(intent, entities)
+                if not intent:
+                    speak("I could not understand")
+                    continue
 
-            print(f"Assistant: {response}")
+                response = route_command(intent, entities)
 
-            speak(response)
+                speak(response)
 
         except Exception as error:
             print(f"Pipeline Error: {error}")
