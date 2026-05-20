@@ -9,6 +9,11 @@ CHANNELS = 1
 RATE = 16000
 CHUNK_SIZE = 1280  # Tamaño recomendado para openWakeWord (80ms a 16kHz)
 
+# Obtener dispositivo desde .env o usar el por defecto (None)
+INPUT_DEVICE = os.getenv("MICROPHONE_ID")
+if INPUT_DEVICE:
+    INPUT_DEVICE = int(INPUT_DEVICE)
+
 class WakeWordDetector:
     def __init__(self, model_name="alexa", threshold=0.5):
         """
@@ -32,7 +37,7 @@ class WakeWordDetector:
         print(f"Esperando palabra de activación '{self.model_name}'...")
         
         # Buffer para procesar el audio
-        with sd.InputStream(samplerate=RATE, channels=CHANNELS, dtype='int16') as stream:
+        with sd.InputStream(samplerate=RATE, channels=CHANNELS, dtype='int16', device=INPUT_DEVICE) as stream:
             while True:
                 try:
                     # Leer chunk de audio
