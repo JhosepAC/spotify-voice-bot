@@ -8,37 +8,37 @@ def correct_track_command(
     track_name
 ):
     """
-    Correct Spotify track name.
+    Semantic track correction.
     """
 
-    result = resolve_track_name(
-        track_name
-    )
-
-    if result is None:
+    if not track_name:
 
         return None
 
-    return result.get(
-        "name"
+    resolved_track = (
+        resolve_track_name(
+            track_name
+        )
     )
+
+    return resolved_track
 
 
 def correct_artist_command(
     artist_name
 ):
     """
-    Correct Spotify artist name.
+    Semantic artist correction.
     """
 
-    result = resolve_artist_name(
-        artist_name
-    )
-
-    if result is None:
+    if not artist_name:
 
         return None
 
-    return result.get(
-        "name"
+    resolved_artist = (
+        resolve_artist_name(
+            artist_name
+        )
     )
+
+    return resolved_artist

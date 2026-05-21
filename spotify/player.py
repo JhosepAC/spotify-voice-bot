@@ -7,7 +7,7 @@ from spotify.device import (
 )
 
 from spotify.search import (
-    search_track
+    search_tracks
 )
 
 
@@ -23,7 +23,7 @@ def play_track(
 
     validate_active_device()
 
-    results = search_track(
+    results = search_tracks(
         track_name,
         limit=1
     )
