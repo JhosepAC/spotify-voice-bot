@@ -11,6 +11,14 @@ def main():
 
         text = listen_command()
 
+        if not text:
+
+            print(
+                "\nREJECTED TRANSCRIPTION"
+            )
+
+            continue
+
         print(
             f"\nDETECTED: {text}"
         )
