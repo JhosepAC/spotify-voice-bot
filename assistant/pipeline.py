@@ -1,99 +1,100 @@
-from voice.command_listener import (
-    listen_command
+"""
+Main assistant pipeline.
+Orchestrates: wake word → listen → NLP → route → speak
+"""
+
+import random
+import json
+import os
+
+from voice.command_listener import listen_command
+from voice.tts import speak
+from nlp.command_builder import build_command
+from commands.router import route_command
+
+_RESPONSES_FILE = os.path.join(
+    os.path.dirname(__file__), "..", "config", "responses.json"
 )
 
-from voice.tts import (
-    speak
-)
+try:
+    with open(_RESPONSES_FILE, encoding="utf-8") as f:
+        _RESPONSES = json.load(f)
+except Exception:
+    _RESPONSES = {}
 
-from nlp.command_builder import (
-    build_command
-)
 
-from commands.router import (
-    route_command
-)
+def _random_response(intent: str, fallback: str) -> str | None:
+    options = _RESPONSES.get(intent)
+    if options:
+        return random.choice(options)
+    return None
+
+_WAKE_WORDS = [
+    "spotify", "oye spotify", "ey spotify", "eh spotify",
+    "hey spotify", "hola spotify",
+]
+
+
+def _strip_wake_word(text: str) -> str:
+    """
+    Remove wake word prefix from transcription if present.
+    """
+    lower = text.lower().strip()
+    for ww in _WAKE_WORDS:
+        if lower.startswith(ww):
+            stripped = text[len(ww):].strip().lstrip(",").strip()
+            return stripped if stripped else text
+    return text
 
 
 def run_voice_assistant():
     """
-    Main realtime assistant loop.
+    Main real-time assistant loop.
     """
-
-    print(
-        "\nSpotify Voice Assistant Ready\n"
-    )
+    print("\n🎵 Spotify Voice Assistant listo")
+    print("─" * 40)
+    print("Habla para dar comandos. Ctrl+C para salir.\n")
 
     while True:
-
         try:
+            print("\nEscuchando...")
 
-            print(
-                "\nListening..."
-            )
-
-            command_text = (
-                listen_command()
-            )
+            command_text = listen_command()
 
             if not command_text:
-
                 continue
 
-            print(
-                f"\nUSER: {command_text}"
-            )
+            command_text = _strip_wake_word(command_text)
 
-            parsed = build_command(
-                command_text
-            )
+            if not command_text:
+                continue
 
-            print(
-                f"\nPARSED: {parsed}"
-            )
+            print(f"\n👤 Usuario: {command_text}")
 
-            intent = parsed.get(
-                "intent"
-            )
+            parsed = build_command(command_text)
+            intent = parsed.get("intent")
+            entities = parsed.get("entities", {})
 
-            entities = parsed.get(
-                "entities",
-                {}
-            )
+            print(f"🧠 Intent: {intent} | Entidades: {entities}")
 
             if intent is None:
-
-                response = (
-                    "I could not understand the command"
-                )
-
-                print(
-                    f"\nASSISTANT: {response}"
-                )
-
+                response = "No entendí ese comando. ¿Puedes repetirlo?"
+                print(f"🤖 Asistente: {response}")
                 speak(response)
-
                 continue
 
-            response = route_command(
+            response = route_command(intent, entities)
 
-                intent,
+            varied = _random_response(intent, response)
+            final_response = varied if varied and "{" not in varied else response
 
-                entities
-            )
+            print(f"🤖 Asistente: {final_response}")
+            speak(final_response)
 
-            print(
-                f"\nASSISTANT: {response}"
-            )
-
-            speak(response)
+        except KeyboardInterrupt:
+            print("\n\nAsistente detenido.")
+            break
 
         except Exception as error:
-
-            print(
-                f"\nERROR: {error}"
-            )
-
-            speak(
-                "An error occurred"
-            )
+            print(f"\n❌ Error: {error}")
+            speak("Lo siento, ocurrió un error.")

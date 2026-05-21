@@ -1,87 +1,33 @@
 """
-Realtime audio configuration.
-Ultra optimized low latency voice engine.
+Audio and Whisper configuration constants.
 """
 
-
-# =========================
-# AUDIO
-# =========================
-
-SAMPLE_RATE = 16000
-
-CHANNELS = 1
-
-DTYPE = "float32"
-
-
-# =========================
-# STREAMING
-# =========================
-
-CHUNK_DURATION_MS = 20
-
-CHUNK_SIZE = int(
-    SAMPLE_RATE * CHUNK_DURATION_MS / 1000
-)
-
-
-# =========================
-# SPEECH DETECTION
-# =========================
-
-MIN_SPEECH_DURATION = 0.20
-
-MAX_SILENCE_DURATION = 0.45
-
-MIN_ACTIVATION_FRAMES = 3
-
-END_SPEECH_FRAMES = 8
-
-PRE_SPEECH_BUFFER_SIZE = 12
-
-
-# =========================
-# ENERGY
-# =========================
-
-BASE_ENERGY_THRESHOLD = 0.008
-
-DYNAMIC_ENERGY_RATIO = 1.5
-
-NOISE_FLOOR_ALPHA = 0.95
-
-
-# =========================
-# REALTIME
-# =========================
-
-LOW_LATENCY_MODE = True
-
-MAX_RECORDING_SECONDS = 8
-
-
-# =========================
-# WHISPER
-# =========================
-
+# ─── Whisper ───────────────────────────────────────────────────────────────────
 WHISPER_MODEL_SIZE = "medium"
 
 WHISPER_LANGUAGE = "es"
 
-WHISPER_BEAM_SIZE = 1
-
+WHISPER_BEAM_SIZE = 3
 WHISPER_BEST_OF = 1
-
-WHISPER_TEMPERATURE = 0.0
-
-
-# =========================
-# DEBUG
-# =========================
-
-DEBUG_AUDIO = False
-
-DEBUG_VAD = False
+WHISPER_TEMPERATURE = 0.0 
 
 DEBUG_TRANSCRIPTION = True
+
+# ─── Captura de audio ─────────────────────────────────────────────────────────
+AUDIO_SAMPLE_RATE = 16000 
+AUDIO_CHANNELS = 1
+AUDIO_DTYPE = "float32"
+
+# ─── VAD (Voice Activity Detection) ──────────────────────────────────────────
+CHUNK_SIZE = 512
+PRE_SPEECH_BUFFER_SIZE = 8
+MIN_ACTIVATION_FRAMES = 2
+MAX_SILENCE_DURATION = 0.9
+MAX_RECORDING_SECONDS = 12
+MIN_SPEECH_DURATION = 0.3
+
+BASE_ENERGY_THRESHOLD = 0.003
+DYNAMIC_ENERGY_RATIO = 1.5
+NOISE_FLOOR_ALPHA = 0.95
+
+DEBUG_VAD = False
