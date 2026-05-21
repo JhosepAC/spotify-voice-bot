@@ -101,6 +101,8 @@ def _call_ollama(text: str) -> dict | None:
 
         raw = response.json().get("response", "").strip()
 
+        print(f"\n[OLLAMA RAW]\n{raw}\n")
+
         # Extraer JSON aunque venga con texto extra
         match = re.search(r'\{.*\}', raw, re.DOTALL)
         if not match:
@@ -117,9 +119,13 @@ def _call_ollama(text: str) -> dict | None:
 # FALLBACK: clasificador por reglas (rápido)
 # Se usa cuando Ollama no responde a tiempo
 # ──────────────────────────────────────────────
+_DIRECT_PLAY_RE = re.compile(
+    r'^(pon|reproduce|toca|play|ponme)\s+(.+)$',
+    re.I
+)
 
 _PAUSE_RE = re.compile(
-    r'\b(pau[sz]a|detener|detén|para|stop|silencia|calla|para la música)\b',
+    r'\b(pau[sz]a|detener|detén|stop|silencia|calla|para la música)\b',
     re.I
 )
 _RESUME_RE = re.compile(
@@ -238,11 +244,9 @@ def _rule_based_classify(text: str) -> dict:
         return {"intent": PLAY_ARTIST, "entities": entities, "confidence": 0.8}
 
     if _PLAY_RE.search(t):
-        # Extraer nombre de canción: todo después del verbo
         parts = _TRACK_SPLIT_RE.split(t)
         name = parts[-1].strip() if parts else t
 
-        # Si tiene "de" en el medio → separar track / artist
         de_split = re.split(r'\bde\b', name, maxsplit=1)
         if len(de_split) == 2:
             track = de_split[0].strip()
@@ -272,10 +276,23 @@ def classify_intent(text: str) -> dict:
             "confidence": float
         }
     """
-    # 1. Intenta con Ollama (LLM local)
+
+    direct = _DIRECT_PLAY_RE.match(text.strip())
+
+    if direct:
+        possible_track = direct.group(2).strip()
+
+        return {
+            "intent": PLAY_TRACK,
+            "entities": {
+            "track_name": possible_track
+            },
+            "confidence": 0.95,
+        }
+
     result = _call_ollama(text)
 
-    if result and result.get("intent") and result["intent"] != UNKNOWN:
+    if result and result.get("intent"):
         entities = {}
 
         if result.get("track_name"):
@@ -295,6 +312,5 @@ def classify_intent(text: str) -> dict:
             "confidence": float(result.get("confidence", 0.9)),
         }
 
-    # 2. Fallback a reglas
-    print("[NLP] Ollama no disponible o sin resultado, usando reglas.")
+    print("[NLP] Ollama falló realmente.")
     return _rule_based_classify(text)

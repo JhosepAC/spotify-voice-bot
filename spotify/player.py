@@ -5,6 +5,7 @@ Handles tracks, artists, albums, playlists, volume.
 
 from spotify.auth import get_spotify_client
 from spotify.device import validate_active_device
+from typing import Any
 
 sp = get_spotify_client()
 
@@ -26,6 +27,10 @@ def play_track(query: str, search_type: str = "track") -> bool:
         device_id = _get_device_id()
 
         results = sp.search(q=query, type=search_type, limit=1)
+
+        if results is None:
+            return False
+
         items_key = f"{search_type}s"
         items = results.get(items_key, {}).get("items", [])
 
@@ -58,22 +63,27 @@ def play_artist(artist_name: str) -> bool:
         device_id = _get_device_id()
 
         results = sp.search(q=artist_name, type="artist", limit=1)
+
+        if results is None:
+            return False
+
         artists = results.get("artists", {}).get("items", [])
 
         if not artists:
             return False
 
         artist_uri = artists[0].get("uri")
+
         if not artist_uri:
             return False
 
         sp.start_playback(device_id=device_id, context_uri=artist_uri)
+
         return True
 
     except Exception as e:
         print(f"[Player] play_artist error: {e}")
         return False
-
 
 def pause_playback():
     try:
@@ -129,7 +139,7 @@ def get_current_volume() -> int:
         return 50
 
 
-def get_current_track() -> dict | None:
+def get_current_track() -> dict[str, Any] | None:
     """
     Returns info about the currently playing track.
     """

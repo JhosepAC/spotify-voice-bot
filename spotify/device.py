@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 """
 Spotify device management.
 """
@@ -7,12 +9,16 @@ from spotify.auth import get_spotify_client
 sp = get_spotify_client()
 
 
-def get_active_device() -> dict | None:
+def get_active_device() -> dict[str, Any] | None:
     """
     Get the first active Spotify device.
     """
     try:
         devices = sp.devices()
+
+        if devices is None:
+            return None
+
         active_devices = [
             d for d in devices.get("devices", [])
             if d.get("is_active")
@@ -21,8 +27,8 @@ def get_active_device() -> dict | None:
         if active_devices:
             return active_devices[0]
 
-        # Si ninguno está activo, retornar el primero disponible
         all_devices = devices.get("devices", [])
+
         if all_devices:
             return all_devices[0]
 
@@ -33,7 +39,7 @@ def get_active_device() -> dict | None:
         return None
 
 
-def validate_active_device() -> dict:
+def validate_active_device() -> dict[str, Any]:
     """
     Get active device or raise exception.
     """

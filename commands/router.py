@@ -1,3 +1,5 @@
+from typing import Optional, Dict, Any
+
 """
 Route parsed intent + entities to the correct handler.
 """
@@ -43,7 +45,7 @@ from commands.handlers import (
 )
 
 
-def route_command(intent: str, entities: dict = None) -> str:
+def route_command(intent: str, entities:  Optional[Dict[str, Any]] = None) -> str:
     """
     Route user intent to corresponding handler.
 
