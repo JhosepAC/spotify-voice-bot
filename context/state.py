@@ -1,9 +1,5 @@
 LAST_INTENT = None
-
 LAST_TRACK = None
-
 LAST_ARTIST = None
-
 LAST_ALBUM = None
-
 LAST_PLAYLIST = None

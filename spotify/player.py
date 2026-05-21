@@ -1,165 +1,158 @@
-from spotify.auth import (
-    get_spotify_client
-)
+"""
+Spotify playback control.
+Handles tracks, artists, albums, playlists, volume.
+"""
 
-from spotify.device import (
-    validate_active_device
-)
-
-from spotify.search import (
-    search_tracks
-)
-
+from spotify.auth import get_spotify_client
+from spotify.device import validate_active_device
 
 sp = get_spotify_client()
 
 
-def play_track(
-    track_name
-):
+def _get_device_id() -> str | None:
+    try:
+        device = validate_active_device()
+        return device.get("id")
+    except Exception:
+        return None
+
+
+def play_track(query: str, search_type: str = "track") -> bool:
     """
-    Search and play Spotify track.
+    Search and play a track, album, or playlist by query string.
+    Returns True on success.
     """
+    try:
+        device_id = _get_device_id()
 
-    validate_active_device()
+        results = sp.search(q=query, type=search_type, limit=1)
+        items_key = f"{search_type}s"
+        items = results.get(items_key, {}).get("items", [])
 
-    results = search_tracks(
-        track_name,
-        limit=1
-    )
+        if not items:
+            return False
 
-    if not results:
+        item = items[0]
+        uri = item.get("uri")
 
-        raise Exception(
-            "Track not found"
-        )
+        if not uri:
+            return False
 
-    track = results[0]
+        if search_type == "track":
+            sp.start_playback(device_id=device_id, uris=[uri])
+        else:
+            sp.start_playback(device_id=device_id, context_uri=uri)
 
-    track_uri = track.get(
-        "uri"
-    )
+        return True
 
-    if not track_uri:
+    except Exception as e:
+        print(f"[Player] play_track error: {e}")
+        return False
 
-        raise Exception(
-            "Invalid track URI"
-        )
 
-    sp.start_playback(
-        uris=[track_uri]
-    )
+def play_artist(artist_name: str) -> bool:
+    """
+    Find artist and play their top tracks.
+    """
+    try:
+        device_id = _get_device_id()
+
+        results = sp.search(q=artist_name, type="artist", limit=1)
+        artists = results.get("artists", {}).get("items", [])
+
+        if not artists:
+            return False
+
+        artist_uri = artists[0].get("uri")
+        if not artist_uri:
+            return False
+
+        sp.start_playback(device_id=device_id, context_uri=artist_uri)
+        return True
+
+    except Exception as e:
+        print(f"[Player] play_artist error: {e}")
+        return False
 
 
 def pause_playback():
-    """
-    Pause current Spotify playback.
-    """
-
-    validate_active_device()
-
-    sp.pause_playback()
+    try:
+        device_id = _get_device_id()
+        sp.pause_playback(device_id=device_id)
+    except Exception as e:
+        print(f"[Player] pause error: {e}")
 
 
 def resume_playback():
-    """
-    Resume Spotify playback.
-    """
-
-    validate_active_device()
-
-    sp.start_playback()
+    try:
+        device_id = _get_device_id()
+        sp.start_playback(device_id=device_id)
+    except Exception as e:
+        print(f"[Player] resume error: {e}")
 
 
 def next_track():
-    """
-    Skip to next track.
-    """
-
-    validate_active_device()
-
-    sp.next_track()
+    try:
+        device_id = _get_device_id()
+        sp.next_track(device_id=device_id)
+    except Exception as e:
+        print(f"[Player] next_track error: {e}")
 
 
 def previous_track():
+    try:
+        device_id = _get_device_id()
+        sp.previous_track(device_id=device_id)
+    except Exception as e:
+        print(f"[Player] previous_track error: {e}")
+
+
+def set_volume(volume_percent: int):
+    try:
+        device_id = _get_device_id()
+        volume_percent = max(0, min(100, volume_percent))
+        sp.volume(volume_percent, device_id=device_id)
+    except Exception as e:
+        print(f"[Player] set_volume error: {e}")
+
+
+def get_current_volume() -> int:
     """
-    Return to previous track.
+    Returns current playback volume (0–100). Defaults to 50.
     """
+    try:
+        playback = sp.current_playback()
+        if playback and playback.get("device"):
+            return playback["device"].get("volume_percent", 50)
+        return 50
+    except Exception:
+        return 50
 
-    validate_active_device()
 
-    sp.previous_track()
-
-
-def set_volume(
-    volume_percent
-):
+def get_current_track() -> dict | None:
     """
-    Set Spotify playback volume.
+    Returns info about the currently playing track.
     """
+    try:
+        playback = sp.current_playback()
+        if not playback:
+            return None
 
-    validate_active_device()
+        track = playback.get("item")
+        if not track:
+            return None
 
-    volume_percent = max(
-        0,
-        min(100, volume_percent)
-    )
+        artists = track.get("artists", [])
+        artist_name = artists[0].get("name", "Unknown") if artists else "Unknown"
 
-    sp.volume(volume_percent)
+        return {
+            "id": track.get("id"),
+            "name": track.get("name"),
+            "artist": artist_name,
+            "album": track.get("album", {}).get("name", "Unknown"),
+            "is_playing": playback.get("is_playing", False),
+        }
 
-
-def get_current_track():
-    """
-    Get current Spotify track.
-    """
-
-    validate_active_device()
-
-    current_playback = (
-        sp.current_playback()
-    )
-
-    if current_playback is None:
-
+    except Exception as e:
+        print(f"[Player] get_current_track error: {e}")
         return None
-
-    track = current_playback.get(
-        "item"
-    )
-
-    if track is None:
-
-        return None
-
-    artists = track.get(
-        "artists",
-        []
-    )
-
-    artist_name = "Unknown"
-
-    if artists:
-
-        artist_name = artists[0].get(
-            "name",
-            "Unknown"
-        )
-
-    album = track.get(
-        "album",
-        {}
-    )
-
-    return {
-        "id": track.get("id"),
-        "name": track.get("name"),
-        "artist": artist_name,
-        "album": album.get(
-            "name",
-            "Unknown"
-        ),
-        "is_playing": current_playback.get(
-            "is_playing",
-            False
-        )
-    }
