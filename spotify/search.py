@@ -36,7 +36,7 @@ def safe_search(query, search_type, limit):
         return {}
 
 
-def search_track(query, limit=SEARCH_LIMIT):
+def search_tracks(query, limit=SEARCH_LIMIT):
     """
     Search Spotify tracks.
     """

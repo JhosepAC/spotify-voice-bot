@@ -2,62 +2,54 @@ from difflib import SequenceMatcher
 
 
 def similarity_score(
-    text_a,
-    text_b
+    first,
+    second
 ):
     """
-    Calculate semantic similarity score.
+    Calculate semantic similarity.
     """
 
     return SequenceMatcher(
 
         None,
 
-        text_a.lower(),
+        first.lower(),
 
-        text_b.lower()
+        second.lower()
 
     ).ratio()
 
 
 def find_best_match(
     query,
-    candidates
+    candidates,
+    threshold=0.55
 ):
     """
     Find best semantic candidate.
     """
 
-    if not candidates:
-
-        return None
-
-    best_candidate = None
+    best_match = None
 
     best_score = 0.0
 
     for candidate in candidates:
 
-        candidate_name = candidate.get(
-            "name",
-            ""
-        )
-
         score = similarity_score(
 
             query,
 
-            candidate_name
+            candidate
         )
 
         if score > best_score:
 
             best_score = score
 
-            best_candidate = candidate
+            best_match = candidate
 
-    if best_score < 0.45:
+    if best_score < threshold:
 
         return None
 
-    return best_candidate
+    return best_match
