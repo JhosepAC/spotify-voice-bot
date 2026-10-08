@@ -236,6 +236,73 @@ def skip_n(count: int) -> int:
     return done
 
 
+def set_shuffle(state: bool) -> bool:
+    """Enable or disable shuffle. Returns True on success."""
+    try:
+        _sp().shuffle(bool(state), device_id=_get_device_id())
+        return True
+    except Exception as e:
+        print(f"[Player] shuffle error: {e}")
+        return False
+
+
+def toggle_shuffle() -> bool | None:
+    """Flip shuffle state. Returns the new state (or None on error)."""
+    try:
+        playback = get_playback_state() or {}
+        new_state = not bool(playback.get("shuffle_state", False))
+        if not set_shuffle(new_state):
+            return None
+        return new_state
+    except Exception as e:
+        print(f"[Player] toggle_shuffle error: {e}")
+        return None
+
+
+def set_repeat_mode(mode: str) -> bool:
+    """Set repeat mode: 'track', 'context' or 'off'."""
+    mode = mode if mode in ("track", "context", "off") else "track"
+    try:
+        _sp().repeat(mode, device_id=_get_device_id())
+        return True
+    except Exception as e:
+        print(f"[Player] repeat error: {e}")
+        return False
+
+
+def queue_track(query: str) -> dict:
+    """Resolve a track and add it to the queue (no playback change)."""
+    try:
+        items, best, score = _search_best(query, "track")
+        if best is None or not best.get("uri"):
+            return {"success": False, "label": None, "score": score}
+        _sp().add_to_queue(best["uri"], device_id=_get_device_id())
+        artists = best.get("artists", []) or []
+        artist = artists[0].get("name", "") if artists else ""
+        name = best.get("name", "")
+        label = f"{name} de {artist}" if artist else name
+        return {"success": True, "label": label, "score": score}
+    except Exception as e:
+        print(f"[Player] queue_track error: {e}")
+        return {"success": False, "label": None, "score": 0.0}
+
+
+def get_queue_labels(count: int = 3) -> list[str]:
+    """Return the next few queued track labels."""
+    try:
+        data = _sp().queue() or {}
+        labels = []
+        for item in (data.get("queue", []) or [])[: max(1, count)]:
+            artists = item.get("artists", []) or []
+            artist = artists[0].get("name", "") if artists else ""
+            name = item.get("name", "")
+            labels.append(f"{name} de {artist}" if artist else name)
+        return labels
+    except Exception as e:
+        print(f"[Player] queue list error: {e}")
+        return []
+
+
 def pause_playback():
     try:
         _sp().pause_playback(device_id=_get_device_id())

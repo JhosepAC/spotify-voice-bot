@@ -17,6 +17,11 @@ from spotify.player import (
     restart_track,
     toggle_playback,
     skip_n,
+    set_shuffle,
+    toggle_shuffle,
+    set_repeat_mode,
+    queue_track,
+    get_queue_labels,
     set_volume,
     get_current_volume,
     get_current_track,
@@ -221,6 +226,57 @@ def handle_skip_n(count=None):
     if done == 1:
         return "Siguiente canción."
     return f"Saltadas {done} canciones."
+
+
+def handle_shuffle_on():
+    if not set_shuffle(True):
+        return "No pude activar el aleatorio."
+    return "Aleatorio activado."
+
+
+def handle_shuffle_off():
+    if not set_shuffle(False):
+        return "No pude quitar el aleatorio."
+    return "Aleatorio desactivado."
+
+
+def handle_shuffle_toggle():
+    result = toggle_shuffle()
+    if result is None:
+        return "No pude cambiar el aleatorio."
+    return "Aleatorio activado." if result else "Aleatorio desactivado."
+
+
+def handle_repeat_mode(mode=None):
+    mode = mode if mode in ("track", "context", "off") else "track"
+    if not set_repeat_mode(mode):
+        return "No pude cambiar la repetición."
+    if mode == "track":
+        return "Repitiendo esta canción."
+    if mode == "context":
+        return "Repitiendo todo."
+    return "Repetición desactivada."
+
+
+def handle_queue_add(track_name=None, artist_name=None):
+    query = (track_name or "").strip()
+    if artist_name:
+        query = f"{query} {artist_name}".strip()
+    if not query:
+        return "No entendí qué agregar a la cola."
+    result = queue_track(query)
+    if not result.get("success"):
+        return f"No encontré '{query}' en Spotify."
+    return f"{result.get('label', query)} agregada a la cola."
+
+
+def handle_queue_list():
+    labels = get_queue_labels(3)
+    if not labels:
+        return "La cola está vacía."
+    if len(labels) == 1:
+        return f"En la cola sigue {labels[0]}."
+    return "En la cola siguen " + ", ".join(labels[:-1]) + f" y {labels[-1]}."
 
 
 def handle_repeat_last():

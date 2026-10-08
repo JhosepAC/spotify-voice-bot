@@ -31,6 +31,12 @@ from commands.intents import (
     RESTART,
     TOGGLE,
     SKIP_N,
+    SHUFFLE_ON,
+    SHUFFLE_OFF,
+    SHUFFLE_TOGGLE,
+    REPEAT_MODE,
+    QUEUE_ADD,
+    QUEUE_LIST,
     NOW_PLAYING,
     CONFIRM_YES,
     CONFIRM_NO,
@@ -58,6 +64,12 @@ from commands.handlers import (
     handle_restart,
     handle_toggle,
     handle_skip_n,
+    handle_shuffle_on,
+    handle_shuffle_off,
+    handle_shuffle_toggle,
+    handle_repeat_mode,
+    handle_queue_add,
+    handle_queue_list,
 )
 
 from spotify.player import play_candidate
@@ -200,5 +212,25 @@ def route_command(intent: str, entities: Optional[Dict[str, Any]] = None) -> str
 
     if intent == SKIP_N:
         return handle_skip_n(entities.get("count"))
+
+    if intent == SHUFFLE_ON:
+        return handle_shuffle_on()
+
+    if intent == SHUFFLE_OFF:
+        return handle_shuffle_off()
+
+    if intent == SHUFFLE_TOGGLE:
+        return handle_shuffle_toggle()
+
+    if intent == REPEAT_MODE:
+        return handle_repeat_mode(entities.get("mode"))
+
+    if intent == QUEUE_ADD:
+        return handle_queue_add(
+            entities.get("track_name"), entities.get("artist_name")
+        )
+
+    if intent == QUEUE_LIST:
+        return handle_queue_list()
 
     return "No entendí ese comando."
