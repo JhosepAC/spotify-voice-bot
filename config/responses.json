@@ -1,0 +1,56 @@
+{
+  "PLAY_TRACK": [
+    "Reproduciendo.",
+    "De una, sonando.",
+    "Listo, dale play."
+  ],
+  "PLAY_ARTIST": [
+    "Poniendo a ese artista.",
+    "De una, puro artista.",
+    "Sonando lo mejor de ese artista."
+  ],
+  "PLAY_ALBUM": [
+    "Reproduciendo el álbum.",
+    "De una, álbum completo."
+  ],
+  "PLAY_PLAYLIST": [
+    "Poniendo la playlist.",
+    "De una, playlist sonando."
+  ],
+  "PAUSE": [
+    "Pausado.",
+    "En pausa."
+  ],
+  "RESUME": [
+    "Sigamos.",
+    "De vuelta a la música."
+  ],
+  "NEXT_TRACK": [
+    "Siguiente.",
+    "Pasando a la que sigue."
+  ],
+  "PREVIOUS_TRACK": [
+    "Volviendo.",
+    "La anterior, de una."
+  ],
+  "LIKE_SONG": [
+    "Guardada en favoritos.",
+    "Anotada, me gusta."
+  ],
+  "VOLUME_UP": [
+    "Subiendo volumen.",
+    "Un poco más fuerte."
+  ],
+  "VOLUME_DOWN": [
+    "Bajando volumen.",
+    "Más bajito, listo."
+  ],
+  "SET_VOLUME": [
+    "Volumen ajustado.",
+    "Listo, nivel cambiado."
+  ],
+  "REPEAT_LAST": [
+    "Repitiendo lo último.",
+    "De nuevo, entonces."
+  ]
+}

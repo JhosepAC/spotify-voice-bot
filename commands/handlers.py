@@ -105,7 +105,11 @@ def handle_previous_track():
 
 
 def handle_like_song():
-    result = like_current_song()
+    """Like the current track, with graceful fallback when idle."""
+    try:
+        result = like_current_song()
+    except Exception:
+        return "No hay ninguna canción en reproducción."
     if result:
         name = result.get("track_name", "esta canción")
         return f"¡{name} agregada a tus favoritos!"
