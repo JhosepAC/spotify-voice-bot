@@ -87,6 +87,12 @@ def test_select_without_candidates_guides_user():
     assert "primero" in msg.lower() or "opciones" in msg.lower(), msg
 
 
+def test_wake_disabled_is_instant_passthrough():
+    from voice.wake import wait_for_wake
+
+    assert wait_for_wake() is True
+
+
 def main() -> int:
     tests = [
         test_chunks_split,
@@ -94,6 +100,7 @@ def main() -> int:
         test_confirm_yes_plays_first_candidate,
         test_select_index_plays_second_candidate,
         test_select_without_candidates_guides_user,
+        test_wake_disabled_is_instant_passthrough,
     ]
     failures = 0
     for fn in tests:
