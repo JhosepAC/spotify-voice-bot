@@ -4,6 +4,7 @@ Orchestrates: wake word -> listen -> NLP -> route -> speak
 """
 
 import random
+import threading
 import time
 import json
 import os
@@ -13,7 +14,11 @@ from voice.ducking import audio_ducked
 from voice.tts import speak
 from nlp.command_builder import build_command
 from commands.router import route_command
-from config.settings import TELEMETRY_ENABLED
+from config.settings import (
+    TELEMETRY_ENABLED,
+    SLOW_ACK_ENABLED,
+    SLOW_ACK_SECONDS,
+)
 from context.manager import push_turn
 
 _RESPONSES_FILE = os.path.join(
@@ -70,6 +75,39 @@ def _log(text: str, intent, entities: dict, lat: dict, response: str) -> None:
         pass
 
 
+def _speak_ducked(text: str) -> None:
+    """Speak with music ducked so the reply stays intelligible."""
+    with audio_ducked():
+        speak(text)
+
+
+def _route_with_ack(intent: str, entities: dict) -> tuple[str, bool, float]:
+    """
+    Run the router; speak a short ack if it takes longer than expected.
+
+    Returns (response, ack_spoken, route_seconds).
+    """
+    holder: dict = {}
+    worker = threading.Thread(
+        target=lambda: holder.update(
+            {"response": route_command(intent, entities)}
+        ),
+        daemon=True,
+    )
+    start = time.perf_counter()
+    worker.start()
+    worker.join(timeout=SLOW_ACK_SECONDS if SLOW_ACK_ENABLED else 0.0)
+    if worker.is_alive():
+        speak("Un momento, estoy buscando.")
+        worker.join()
+        return holder.get("response", "Lo siento, ocurrió un error."), True, round(
+            time.perf_counter() - start, 2
+        )
+    return holder.get("response", "Lo siento, ocurrió un error."), False, round(
+        time.perf_counter() - start, 2
+    )
+
+
 def run_voice_assistant():
     """
     Main real-time assistant loop.
@@ -111,21 +149,21 @@ def run_voice_assistant():
                 response = "No entendí ese comando. ¿Puedes repetirlo?"
                 print(f"Asistente: {response}")
                 start = time.perf_counter()
-                speak(response)
+                _speak_ducked(response)
                 lat["tts"] = round(time.perf_counter() - start, 2)
                 _log(command_text, None, entities, lat, response)
                 continue
 
-            start = time.perf_counter()
-            response = route_command(intent, entities)
-            lat["route"] = round(time.perf_counter() - start, 2)
+            response, ack_spoken, route_s = _route_with_ack(intent, entities)
+            lat["route"] = route_s
+            lat["ack"] = ack_spoken
 
             varied = _random_response(intent, response)
             final_response = varied if varied and "{" not in varied else response
 
             print(f"Asistente: {final_response} | lat={lat}")
             start = time.perf_counter()
-            speak(final_response)
+            _speak_ducked(final_response)
             lat["tts"] = round(time.perf_counter() - start, 2)
             _log(command_text, intent, entities, lat, final_response)
 
