@@ -81,6 +81,12 @@ LOW_CONFIRM_THRESHOLD = float(os.getenv("LOW_CONFIRM_THRESHOLD", "65"))
 BARGE_IN_ENABLED = os.getenv("BARGE_IN_ENABLED", "false").lower() == "true"
 BARGE_IN_RATIO = float(os.getenv("BARGE_IN_RATIO", "6.0"))
 
+# ─── Wake word (optional gate before each turn) ───────────────────────────────
+WAKE_ENABLED = os.getenv("WAKE_ENABLED", "false").lower() == "true"
+WAKE_KEYWORDS = [
+    w.strip() for w in os.getenv("WAKE_KEYWORDS", "hey spotify").split(",") if w.strip()
+]
+
 # ─── Directories ──────────────────────────────────────────────────────────────
 TEMP_DIR.mkdir(exist_ok=True)
 LOGS_DIR.mkdir(exist_ok=True)
