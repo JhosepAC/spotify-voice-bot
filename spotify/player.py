@@ -28,7 +28,8 @@ def resolve_and_play(query: str, search_type: str = "track") -> dict:
     Search top candidates, fuzzy-pick the best one, and play it.
 
     Returns:
-        {"success": bool, "label": str | None, "score": float}
+        {"success": bool, "label": str | None, "score": float,
+         "candidates": [{"uri": str, "label": str}]}
         Label is the API-verified name to speak back to the user.
     """
     try:
@@ -37,11 +38,11 @@ def resolve_and_play(query: str, search_type: str = "track") -> dict:
 
         results = client.search(q=query, type=search_type, limit=5)
         if results is None:
-            return {"success": False, "label": None, "score": 0.0}
+            return {"success": False, "label": None, "score": 0.0, "candidates": []}
 
         items = results.get(f"{search_type}s", {}).get("items", [])
         if not items:
-            return {"success": False, "label": None, "score": 0.0}
+            return {"success": False, "label": None, "score": 0.0, "candidates": []}
 
         best, score = pick_best(query, items, search_type)
         if best is None or score < 45.0:
@@ -49,17 +50,27 @@ def resolve_and_play(query: str, search_type: str = "track") -> dict:
 
         uri = best.get("uri")
         if not uri:
-            return {"success": False, "label": None, "score": score}
+            return {"success": False, "label": None, "score": score, "candidates": []}
 
         if search_type == "track":
             client.start_playback(device_id=device_id, uris=[uri])
         else:
             client.start_playback(device_id=device_id, context_uri=uri)
 
-        return {"success": True, "label": display_label(best, search_type), "score": score}
+        candidates = [
+            {"uri": it.get("uri"), "label": display_label(it, search_type)}
+            for it in items[:5]
+            if it.get("uri")
+        ]
+        return {
+            "success": True,
+            "label": display_label(best, search_type),
+            "score": score,
+            "candidates": candidates,
+        }
     except Exception as e:
         print(f"[Player] resolve_and_play error: {e}")
-        return {"success": False, "label": None, "score": 0.0}
+        return {"success": False, "label": None, "score": 0.0, "candidates": []}
 
 
 def play_track(query: str, search_type: str = "track") -> bool:
@@ -99,6 +110,21 @@ def play_artist(artist_name: str) -> bool:
     Find artist and play their top tracks.
     """
     return bool(resolve_artist(artist_name).get("success"))
+
+
+def play_candidate(uri: str, search_type: str = "track") -> bool:
+    """Play an already-resolved Spotify URI (disambiguation picks)."""
+    try:
+        client = _sp()
+        device_id = _get_device_id()
+        if search_type == "track":
+            client.start_playback(device_id=device_id, uris=[uri])
+        else:
+            client.start_playback(device_id=device_id, context_uri=uri)
+        return True
+    except Exception as e:
+        print(f"[Player] play_candidate error: {e}")
+        return False
 
 
 def pause_playback():

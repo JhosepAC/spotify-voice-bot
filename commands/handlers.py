@@ -1,6 +1,7 @@
 """Command handlers: map intents to Spotify actions."""
 
 import context.state as state
+from context.manager import set_last_candidates
 
 from spotify.player import (
     resolve_and_play,
@@ -34,6 +35,10 @@ def handle_play_track(track_name, artist_name=None):
         spoken = query or "esa canción"
         return f"No encontré '{spoken}' en Spotify."
 
+    set_last_candidates(
+        [{**c, "search_type": "track"} for c in result.get("candidates", [])],
+        query=query,
+    )
     return f"Reproduciendo {result.get('label', query)}."
 
 
