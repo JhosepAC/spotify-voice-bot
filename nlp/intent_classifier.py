@@ -29,8 +29,15 @@ from commands.intents import (
     VOLUME_UP,
     VOLUME_DOWN,
     SET_VOLUME,
+    NOW_PLAYING,
+    CONFIRM_YES,
+    CONFIRM_NO,
+    SELECT_INDEX,
+    CANCEL,
     UNKNOWN,
 )
+
+from nlp.local_classifier import score_intent, HIGH_CONFIDENCE
 
 
 SYSTEM_PROMPT = """Eres el clasificador de intenciones de un asistente de voz para Spotify.
@@ -159,6 +166,14 @@ _VOL_SET_RE = re.compile(
 )
 _DALE_PLAY_RE = re.compile(r'\bdale\s+(play|continúa|continua|sigue)\b', re.I)
 _FILLER_TRACK_PREFIX_RE = re.compile(r'^(otra|esa|esta|la|el)\s+', re.I)
+_SELECT_INDEX_RE = re.compile(
+    r'\b(la\s+)?(primera|segunda|tercera|cuarta|quinta|[1-5])\b',
+    re.I
+)
+_ORDINAL_MAP = {
+    "primera": 1, "segunda": 2, "tercera": 3, "cuarta": 4, "quinta": 5,
+    "1": 1, "2": 2, "3": 3, "4": 4, "5": 5,
+}
 _ARTIST_RE = re.compile(
     r'\b(algo de|música de|canciones de|temas de|lo de|artista|pon a)\b',
     re.I
@@ -281,10 +296,24 @@ def _rule_based_classify(text: str) -> dict:
     return {"intent": UNKNOWN, "entities": {}, "confidence": 0.3}
 
 
+def _detect_selection(text: str) -> dict | None:
+    """Detect disambiguation picks like 'la segunda' or '2'."""
+    match = _SELECT_INDEX_RE.search(text.lower().strip())
+    if not match:
+        return None
+    token = match.group(2).lower()
+    index = _ORDINAL_MAP.get(token)
+    if index is None:
+        return None
+    return {"intent": SELECT_INDEX, "entities": {"index": index}, "confidence": 0.9}
+
+
 def classify_intent(text: str) -> dict:
     """
-    Main intent classification.
-    Tries Ollama first (LLM-based NLU), falls back to rules.
+    Main intent classification (fast path first).
+
+    Order: selection shortcut -> local fuzzy (instant) ->
+    Ollama LLM (optional) -> rule-based fallback.
 
     No rigid shortcut: every request goes through NLU so
     paraphrases ("pon algo de X" vs "pon X") resolve correctly.
@@ -296,6 +325,32 @@ def classify_intent(text: str) -> dict:
             "confidence": float
         }
     """
+    selection = _detect_selection(text)
+    if selection:
+        return selection
+
+    local = score_intent(text)
+    if local["intent"] != UNKNOWN and local["score"] >= HIGH_CONFIDENCE:
+        if local["intent"] in (CONFIRM_YES, CONFIRM_NO, CANCEL, NOW_PLAYING):
+            return {
+                "intent": local["intent"],
+                "entities": {},
+                "confidence": local["confidence"],
+            }
+        rule_result = _rule_based_classify(text)
+        if rule_result["intent"] == UNKNOWN or rule_result["intent"] == local["intent"]:
+            return {
+                "intent": local["intent"],
+                "entities": rule_result.get("entities", {}),
+                "confidence": max(local["confidence"], rule_result.get("confidence", 0.0)),
+            }
+        # Local intent wins for transport/mood paraphrases; keep rule entities.
+        return {
+            "intent": local["intent"],
+            "entities": rule_result.get("entities", {}),
+            "confidence": local["confidence"],
+        }
+
     result = _call_ollama(text)
 
     if result and result.get("intent"):
