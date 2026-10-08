@@ -139,6 +139,39 @@ CANCEL = [
     "para todo",
 ]
 
+SEEK_FORWARD = [
+    "adelanta 30 segundos",
+    "avanza un poco",
+    "adelanta la cancion",
+    "salta hacia adelante",
+]
+
+SEEK_BACK = [
+    "retrocede 15 segundos",
+    "ve para atras",
+    "regresa un poco la cancion",
+    "devuelvete unos segundos",
+]
+
+RESTART = [
+    "desde el principio",
+    "reinicia la cancion",
+    "del inicio otra vez",
+    "vuelve a empezar",
+]
+
+TOGGLE = [
+    "alterna",
+    "pausa o sigue",
+    "play pause",
+]
+
+SKIP_N = [
+    "salta 3 canciones",
+    "pasa 2 temas",
+    "saltate 5",
+]
+
 INTENT_EXAMPLES = {
     "PLAY_TRACK": PLAY_TRACK,
     "PLAY_ARTIST": PLAY_ARTIST,
@@ -156,4 +189,9 @@ INTENT_EXAMPLES = {
     "CONFIRM_YES": CONFIRM_YES,
     "CONFIRM_NO": CONFIRM_NO,
     "CANCEL": CANCEL,
+    "SEEK_FORWARD": SEEK_FORWARD,
+    "SEEK_BACK": SEEK_BACK,
+    "RESTART": RESTART,
+    "TOGGLE": TOGGLE,
+    "SKIP_N": SKIP_N,
 }

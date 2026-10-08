@@ -26,6 +26,11 @@ from commands.intents import (
     VOLUME_UP,
     VOLUME_DOWN,
     SET_VOLUME,
+    SEEK_FORWARD,
+    SEEK_BACK,
+    RESTART,
+    TOGGLE,
+    SKIP_N,
     NOW_PLAYING,
     CONFIRM_YES,
     CONFIRM_NO,
@@ -48,6 +53,11 @@ from commands.handlers import (
     handle_volume_up,
     handle_volume_down,
     handle_set_volume,
+    handle_seek_forward,
+    handle_seek_back,
+    handle_restart,
+    handle_toggle,
+    handle_skip_n,
 )
 
 from spotify.player import play_candidate
@@ -175,5 +185,20 @@ def route_command(intent: str, entities: Optional[Dict[str, Any]] = None) -> str
 
     if intent == SET_VOLUME:
         return handle_set_volume(entities.get("volume_level"))
+
+    if intent == SEEK_FORWARD:
+        return handle_seek_forward(entities.get("seconds"))
+
+    if intent == SEEK_BACK:
+        return handle_seek_back(entities.get("seconds"))
+
+    if intent == RESTART:
+        return handle_restart()
+
+    if intent == TOGGLE:
+        return handle_toggle()
+
+    if intent == SKIP_N:
+        return handle_skip_n(entities.get("count"))
 
     return "No entendí ese comando."

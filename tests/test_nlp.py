@@ -52,6 +52,16 @@ CASES = [
     ("no esa no", "CONFIRM_NO", {}),
     ("cancela", "CANCEL", {}),
     ("olvida eso", "CANCEL", {}),
+    # Phase 3: transport
+    ("adelanta 30 segundos", "SEEK_FORWARD", {"seconds": 30}),
+    ("avanza un minuto", "SEEK_FORWARD", {}),
+    ("retrocede 15 segundos", "SEEK_BACK", {"seconds": 15}),
+    ("regresa 20 segundos", "SEEK_BACK", {"seconds": 20}),
+    ("desde el principio", "RESTART", {}),
+    ("reinicia la cancion", "RESTART", {}),
+    ("alterna", "TOGGLE", {}),
+    ("salta 3 canciones", "SKIP_N", {"count": 3}),
+    ("pasa 2 temas", "SKIP_N", {"count": 2}),
 ]
 
 # Noisy STT inputs must still resolve (fuzzy robustness)

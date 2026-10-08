@@ -163,6 +163,79 @@ def play_candidate(uri: str, search_type: str = "track") -> bool:
         return False
 
 
+def get_playback_state() -> dict | None:
+    """Return raw current playback dict (or None when idle)."""
+    try:
+        return _sp().current_playback()
+    except Exception as e:
+        print(f"[Player] playback state error: {e}")
+        return None
+
+
+def seek_forward(seconds: int = 30) -> int:
+    """Jump forward; returns the new position in seconds."""
+    try:
+        playback = get_playback_state() or {}
+        pos = int(playback.get("progress_ms") or 0)
+        new_pos = pos + max(1, seconds) * 1000
+        _sp().seek_track(new_pos, device_id=_get_device_id())
+        return new_pos // 1000
+    except Exception as e:
+        print(f"[Player] seek_forward error: {e}")
+        return -1
+
+
+def seek_back(seconds: int = 15) -> int:
+    """Jump backward; returns the new position in seconds."""
+    try:
+        playback = get_playback_state() or {}
+        pos = int(playback.get("progress_ms") or 0)
+        new_pos = max(0, pos - max(1, seconds) * 1000)
+        _sp().seek_track(new_pos, device_id=_get_device_id())
+        return new_pos // 1000
+    except Exception as e:
+        print(f"[Player] seek_back error: {e}")
+        return -1
+
+
+def restart_track() -> bool:
+    """Restart the current track from the beginning."""
+    try:
+        _sp().seek_track(0, device_id=_get_device_id())
+        return True
+    except Exception as e:
+        print(f"[Player] restart error: {e}")
+        return False
+
+
+def toggle_playback() -> str:
+    """Toggle play/pause. Returns 'playing', 'paused' or 'unknown'."""
+    try:
+        playback = get_playback_state()
+        if not playback:
+            return "unknown"
+        if playback.get("is_playing"):
+            pause_playback()
+            return "paused"
+        resume_playback()
+        return "playing"
+    except Exception as e:
+        print(f"[Player] toggle error: {e}")
+        return "unknown"
+
+
+def skip_n(count: int) -> int:
+    """Skip forward N tracks. Returns tracks actually skipped."""
+    done = 0
+    try:
+        for _ in range(max(1, min(20, int(count)))):
+            next_track()
+            done += 1
+    except Exception as e:
+        print(f"[Player] skip_n error: {e}")
+    return done
+
+
 def pause_playback():
     try:
         _sp().pause_playback(device_id=_get_device_id())
