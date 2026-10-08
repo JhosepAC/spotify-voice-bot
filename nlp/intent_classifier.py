@@ -8,6 +8,13 @@ import json
 import re
 import requests
 
+from config.settings import (
+    OLLAMA_URL,
+    OLLAMA_MODEL,
+    OLLAMA_TIMEOUT,
+    OLLAMA_ENABLED,
+)
+
 from commands.intents import (
     PLAY_TRACK,
     PLAY_ARTIST,
@@ -24,10 +31,6 @@ from commands.intents import (
     SET_VOLUME,
     UNKNOWN,
 )
-
-OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-OLLAMA_MODEL = "phi3"          # phi3 = muy liviano (~2GB), rápido, excelente NLU
-OLLAMA_TIMEOUT = 4             # segundos máximo de espera
 
 
 SYSTEM_PROMPT = """Eres el clasificador de intenciones de un asistente de voz para Spotify.
@@ -78,6 +81,8 @@ def _call_ollama(text: str) -> dict | None:
     Call local Ollama for intent classification.
     Returns parsed dict or None on failure.
     """
+    if not OLLAMA_ENABLED:
+        return None
     try:
         payload = {
             "model": OLLAMA_MODEL,
@@ -103,7 +108,7 @@ def _call_ollama(text: str) -> dict | None:
 
         print(f"\n[OLLAMA RAW]\n{raw}\n")
 
-        # Extraer JSON aunque venga con texto extra
+        # Extract JSON even if wrapped in extra text
         match = re.search(r'\{.*\}', raw, re.DOTALL)
         if not match:
             return None
@@ -116,24 +121,20 @@ def _call_ollama(text: str) -> dict | None:
 
 
 # ──────────────────────────────────────────────
-# FALLBACK: clasificador por reglas (rápido)
-# Se usa cuando Ollama no responde a tiempo
+# FALLBACK: rule-based classifier (fast)
+# Used when Ollama is disabled or times out
 # ──────────────────────────────────────────────
-_DIRECT_PLAY_RE = re.compile(
-    r'^(pon|reproduce|toca|play|ponme)\s+(.+)$',
-    re.I
-)
 
 _PAUSE_RE = re.compile(
     r'\b(pau[sz]a|detener|detén|stop|silencia|calla|para la música)\b',
     re.I
 )
 _RESUME_RE = re.compile(
-    r'\b(reanuda|continúa|sigue|resume|play|reproduce ya|dale|seguir)\b',
+    r'\b(reanuda|continúa|continua|sigue|resume|seguir|reproduce ya|dale (play|continúa|continua|sigue))\b',
     re.I
 )
 _NEXT_RE = re.compile(
-    r'\b(siguiente|otra|next|skip|salta|pasa(la)?|cambia)\b',
+    r'\b(siguiente|next|skip|salta|pasa(la)?|sáltala|saltate)\b',
     re.I
 )
 _PREV_RE = re.compile(
@@ -153,9 +154,11 @@ _VOL_DOWN_RE = re.compile(
     re.I
 )
 _VOL_SET_RE = re.compile(
-    r'\b(pon|pone|sube|baja|coloca|ajusta).{0,20}(volumen|vol).{0,10}(\d{1,3})\b',
+    r'\b(volumen|vol)\b.*?(\d{1,3})\b',
     re.I
 )
+_DALE_PLAY_RE = re.compile(r'\bdale\s+(play|continúa|continua|sigue)\b', re.I)
+_FILLER_TRACK_PREFIX_RE = re.compile(r'^(otra|esa|esta|la|el)\s+', re.I)
 _ARTIST_RE = re.compile(
     r'\b(algo de|música de|canciones de|temas de|lo de|artista|pon a)\b',
     re.I
@@ -185,19 +188,27 @@ _ARTIST_SPLIT_RE = re.compile(
 def _rule_based_classify(text: str) -> dict:
     """
     Fast rule-based fallback classifier.
+    Alexa-style: accept many paraphrases, avoid false positives
+    when a play verb is present.
     """
     t = text.lower().strip()
+    has_play_verb = bool(_PLAY_RE.search(t))
+
+    if _DALE_PLAY_RE.search(t):
+        return {"intent": RESUME, "entities": {}, "confidence": 0.9}
 
     if _PAUSE_RE.search(t):
         return {"intent": PAUSE, "entities": {}, "confidence": 0.9}
 
-    if _RESUME_RE.search(t) and not _PLAY_RE.search(t):
+    if _RESUME_RE.search(t) and not has_play_verb:
         return {"intent": RESUME, "entities": {}, "confidence": 0.85}
 
-    if _NEXT_RE.search(t):
+    # Transport commands only win when there is no explicit play request.
+    # This prevents "pon otra de Karol G" from becoming NEXT_TRACK.
+    if _NEXT_RE.search(t) and not has_play_verb:
         return {"intent": NEXT_TRACK, "entities": {}, "confidence": 0.9}
 
-    if _PREV_RE.search(t):
+    if _PREV_RE.search(t) and not has_play_verb:
         return {"intent": PREVIOUS_TRACK, "entities": {}, "confidence": 0.9}
 
     if _LIKE_RE.search(t):
@@ -211,18 +222,19 @@ def _rule_based_classify(text: str) -> dict:
 
     vol_set = _VOL_SET_RE.search(t)
     if vol_set:
-        level = int(vol_set.group(3))
+        level = int(vol_set.group(2))
+        level = max(0, min(100, level))
         return {
             "intent": SET_VOLUME,
             "entities": {"volume_level": level},
             "confidence": 0.85,
         }
 
-    # ---- Extracción de nombre ----
+    # ---- Entity extraction ----
     entities = {}
 
     if _ALBUM_RE.search(t):
-        # "reproduce el álbum X" → album_name = X
+        # "play album X" -> album_name = X
         album = re.split(r'\b(álbum|album|disco)\b', t, maxsplit=1, flags=re.I)
         name = album[-1].strip().lstrip('de').strip() if len(album) > 1 else ""
         if name:
@@ -246,6 +258,8 @@ def _rule_based_classify(text: str) -> dict:
     if _PLAY_RE.search(t):
         parts = _TRACK_SPLIT_RE.split(t)
         name = parts[-1].strip() if parts else t
+        # Strip leading fillers from previous faulty split ("otra de X" -> "X")
+        name = _FILLER_TRACK_PREFIX_RE.sub("", name).strip()
 
         de_split = re.split(r'\bde\b', name, maxsplit=1)
         if len(de_split) == 2:
@@ -255,6 +269,9 @@ def _rule_based_classify(text: str) -> dict:
                 entities["track_name"] = track
             if artist:
                 entities["artist_name"] = artist
+            # "pon otra de X" / filler-only track means artist request.
+            if not track and artist:
+                return {"intent": PLAY_ARTIST, "entities": entities, "confidence": 0.8}
         else:
             if name:
                 entities["track_name"] = name
@@ -269,6 +286,9 @@ def classify_intent(text: str) -> dict:
     Main intent classification.
     Tries Ollama first (LLM-based NLU), falls back to rules.
 
+    No rigid shortcut: every request goes through NLU so
+    paraphrases ("pon algo de X" vs "pon X") resolve correctly.
+
     Returns:
         {
             "intent": str,
@@ -276,20 +296,6 @@ def classify_intent(text: str) -> dict:
             "confidence": float
         }
     """
-
-    direct = _DIRECT_PLAY_RE.match(text.strip())
-
-    if direct:
-        possible_track = direct.group(2).strip()
-
-        return {
-            "intent": PLAY_TRACK,
-            "entities": {
-            "track_name": possible_track
-            },
-            "confidence": 0.95,
-        }
-
     result = _call_ollama(text)
 
     if result and result.get("intent"):
@@ -312,5 +318,5 @@ def classify_intent(text: str) -> dict:
             "confidence": float(result.get("confidence", 0.9)),
         }
 
-    print("[NLP] Ollama falló realmente.")
+    print("[NLP] Ollama unavailable or low quality, using rule-based fallback.")
     return _rule_based_classify(text)
