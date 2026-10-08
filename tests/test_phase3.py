@@ -113,6 +113,47 @@ def test_queue_add_and_list():
     assert "Queued 1" in listing and "Queued 3" in listing, listing
 
 
+def test_mute_unmute_roundtrip():
+    use_fake()
+    from commands.router import route_command
+
+    FAKE.playback["device"]["volume_percent"] = 50
+    assert "silenciado" in route_command("MUTE", {}).lower()
+    assert FAKE.called("volume")[-1][1] == 0
+    msg = route_command("UNMUTE", {})
+    assert "50" in msg, msg
+    assert "50" in route_command("VOLUME_STATUS", {}), msg
+
+
+def test_devices_list_and_transfer():
+    use_fake()
+    from commands.router import route_command
+
+    listing = route_command("LIST_DEVICES", {})
+    assert "PC" in listing and "Celular" in listing, listing
+    msg = route_command("TRANSFER_DEVICE", {"device_name": "celular"})
+    assert "Celular" in msg, msg
+    assert FAKE.called("transfer_playback")[0][1] == "d2"
+    assert "dispositivo" in route_command("TRANSFER_DEVICE", {"device_name": "x"}).lower()
+
+
+def test_unlike_and_check_like():
+    use_fake()
+    from commands.router import route_command
+
+    assert "quitada" in route_command("UNLIKE_SONG", {}).lower()
+    assert FAKE.called("saved_delete")
+    assert "favoritos" in route_command("CHECK_LIKE", {}).lower()
+
+
+def test_help_and_who_sings():
+    use_fake()
+    from commands.router import route_command
+
+    assert "Shakira" in route_command("HELP", {})
+    assert "Test Song" in route_command("WHO_SINGS", {})
+
+
 def main() -> int:
     tests = [
         test_seek_forward_moves_position,
@@ -124,6 +165,10 @@ def main() -> int:
         test_shuffle_toggle_flips_state,
         test_repeat_modes,
         test_queue_add_and_list,
+        test_mute_unmute_roundtrip,
+        test_devices_list_and_transfer,
+        test_unlike_and_check_like,
+        test_help_and_who_sings,
     ]
     failures = 0
     for fn in tests:

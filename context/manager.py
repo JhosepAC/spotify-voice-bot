@@ -37,6 +37,14 @@ def clear_candidates():
     state.LAST_QUERY = None
 
 
+def set_last_volume(volume):
+    state.LAST_VOLUME = volume
+
+
+def get_last_volume():
+    return state.LAST_VOLUME
+
+
 def push_turn(text, intent):
     state.TURN_HISTORY.append({"text": text, "intent": intent})
     del state.TURN_HISTORY[:-10]

@@ -303,6 +303,74 @@ def get_queue_labels(count: int = 3) -> list[str]:
         return []
 
 
+def mute() -> int | None:
+    """Mute playback, remembering the previous volume. Returns it."""
+    try:
+        from context.manager import set_last_volume
+
+        current = get_current_volume()
+        set_last_volume(current)
+        _sp().volume(0, device_id=_get_device_id())
+        return current
+    except Exception as e:
+        print(f"[Player] mute error: {e}")
+        return None
+
+
+def unmute() -> int:
+    """Restore pre-mute volume (or 50). Returns the restored level."""
+    try:
+        from context.manager import get_last_volume
+
+        saved = get_last_volume()
+        level = int(saved) if saved is not None else 50
+        _sp().volume(max(0, min(100, level)), device_id=_get_device_id())
+        return level
+    except Exception as e:
+        print(f"[Player] unmute error: {e}")
+        return -1
+
+
+def list_device_names() -> list[dict]:
+    """Return available devices as [{id, name, active}]."""
+    try:
+        data = _sp().devices() or {}
+        return [
+            {
+                "id": d.get("id"),
+                "name": d.get("name", "Unknown"),
+                "active": bool(d.get("is_active")),
+            }
+            for d in data.get("devices", [])
+        ]
+    except Exception as e:
+        print(f"[Player] devices error: {e}")
+        return []
+
+
+def transfer_to_device(name: str) -> dict:
+    """Fuzzy-match a device name and transfer playback to it."""
+    try:
+        from nlp.normalizer import normalize as norm
+        from rapidfuzz import fuzz
+
+        devices = list_device_names()
+        if not devices:
+            return {"success": False, "label": None}
+        best, best_score = None, 0.0
+        for dev in devices:
+            score = float(fuzz.token_set_ratio(norm(name), norm(dev["name"])))
+            if score > best_score:
+                best_score, best = score, dev
+        if best is None or best_score < 50.0:
+            return {"success": False, "label": None}
+        _sp().transfer_playback(best["id"], force_play=True)
+        return {"success": True, "label": best["name"]}
+    except Exception as e:
+        print(f"[Player] transfer error: {e}")
+        return {"success": False, "label": None}
+
+
 def pause_playback():
     try:
         _sp().pause_playback(device_id=_get_device_id())
