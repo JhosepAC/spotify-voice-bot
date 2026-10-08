@@ -18,6 +18,7 @@ from config.settings import (
     TELEMETRY_ENABLED,
     SLOW_ACK_ENABLED,
     SLOW_ACK_SECONDS,
+    BARGE_IN_ENABLED,
 )
 from context.manager import push_turn
 
@@ -77,8 +78,16 @@ def _log(text: str, intent, entities: dict, lat: dict, response: str) -> None:
 
 def _speak_ducked(text: str) -> None:
     """Speak with music ducked so the reply stays intelligible."""
+    should_abort = None
+    if BARGE_IN_ENABLED:
+        try:
+            from voice.barge import make_abort_checker
+
+            should_abort = make_abort_checker()
+        except Exception:
+            should_abort = None
     with audio_ducked():
-        speak(text)
+        speak(text, should_abort=should_abort)
 
 
 def _route_with_ack(intent: str, entities: dict) -> tuple[str, bool, float]:

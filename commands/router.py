@@ -68,6 +68,19 @@ def _handle_selection(index: int) -> str:
     return f"Reproduciendo {pick.get('label', 'esa opción')}."
 
 
+def _handle_confirm_yes() -> str:
+    """User confirmed the asked candidate: play the first pending option."""
+    candidates = get_last_candidates()
+    if not candidates:
+        return "Perfecto, seguimos con esa."
+    pick = candidates[0]
+    ok = play_candidate(pick["uri"], pick.get("search_type", "track"))
+    if not ok:
+        return "No pude ponerla. Intenta de nuevo."
+    clear_candidates()
+    return f"Perfecto. Reproduciendo {pick.get('label', 'esa opción')}."
+
+
 def _handle_confirm_no() -> str:
     """User rejected the top pick: offer the next candidate."""
     candidates = get_last_candidates()
@@ -142,8 +155,7 @@ def route_command(intent: str, entities: Optional[Dict[str, Any]] = None) -> str
         return _handle_selection(int(entities.get("index", 1)))
 
     if intent == CONFIRM_YES:
-        clear_candidates()
-        return "Perfecto, seguimos con esa."
+        return _handle_confirm_yes()
 
     if intent == CONFIRM_NO:
         return _handle_confirm_no()
