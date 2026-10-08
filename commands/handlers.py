@@ -1,9 +1,11 @@
 """Command handlers: map intents to Spotify actions."""
 
 import context.state as state
+from config.settings import LOW_CONFIRM_THRESHOLD
 from context.manager import set_last_candidates
 
 from spotify.player import (
+    preview_candidates,
     resolve_and_play,
     resolve_artist,
     pause_playback,
@@ -18,10 +20,29 @@ from spotify.player import (
 from spotify.like import like_current_song
 
 
+def _maybe_confirm(query: str, search_type: str):
+    """
+    Preview search results before playing.
+
+    Returns (action, payload) where action is "play", "ask" or "miss".
+    Low fuzzy scores ask the user instead of playing the wrong item.
+    """
+    preview = preview_candidates(query, search_type)
+    label = preview.get("label")
+    score = preview.get("score", 0.0)
+    if not label:
+        return "miss", preview
+    if score < LOW_CONFIRM_THRESHOLD:
+        set_last_candidates(preview.get("candidates", []), query=query)
+        return "ask", preview
+    return "play", preview
+
+
 def handle_play_track(track_name, artist_name=None):
     """
     Play a specific track, optionally filtered by artist.
     Speaks back the API-verified title, not the raw transcript.
+    Asks for confirmation on low fuzzy scores.
     """
     if not track_name and not artist_name:
         return "No entendí el nombre de la canción."
@@ -29,6 +50,16 @@ def handle_play_track(track_name, artist_name=None):
     query = track_name or ""
     if artist_name:
         query = f"{query} {artist_name}".strip()
+
+    action, preview = _maybe_confirm(query, "track")
+    if action == "miss":
+        spoken = query or "esa canción"
+        return f"No encontré '{spoken}' en Spotify."
+    if action == "ask":
+        return (
+            f"No estoy segura. ¿Quisiste decir {preview.get('label')}? "
+            "Di sí, o la segunda."
+        )
 
     result = resolve_and_play(query, search_type="track")
     if not result.get("success"):

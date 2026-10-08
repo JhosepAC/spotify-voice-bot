@@ -74,6 +74,13 @@ SPOTIFY_TIMEOUT = int(os.getenv("SPOTIFY_TIMEOUT", "10"))
 SLOW_ACK_ENABLED = os.getenv("SLOW_ACK_ENABLED", "true").lower() == "true"
 SLOW_ACK_SECONDS = float(os.getenv("SLOW_ACK_SECONDS", "1.2"))
 
+# ─── Play confirmation ────────────────────────────────────────────────────────
+LOW_CONFIRM_THRESHOLD = float(os.getenv("LOW_CONFIRM_THRESHOLD", "65"))
+
+# ─── Barge-in (interrupt the reply by speaking over it) ───────────────────────
+BARGE_IN_ENABLED = os.getenv("BARGE_IN_ENABLED", "false").lower() == "true"
+BARGE_IN_RATIO = float(os.getenv("BARGE_IN_RATIO", "6.0"))
+
 # ─── Directories ──────────────────────────────────────────────────────────────
 TEMP_DIR.mkdir(exist_ok=True)
 LOGS_DIR.mkdir(exist_ok=True)

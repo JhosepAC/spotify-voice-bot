@@ -23,6 +23,50 @@ def _get_device_id() -> str | None:
         return None
 
 
+def _search_best(query: str, search_type: str = "track") -> tuple:
+    """
+    Search top candidates and fuzzy-pick the best one (no playback).
+
+    Returns (items, best_item_or_None, score).
+    """
+    client = _sp()
+    results = client.search(q=query, type=search_type, limit=5)
+    if results is None:
+        return [], None, 0.0
+    items = results.get(f"{search_type}s", {}).get("items", [])
+    if not items:
+        return [], None, 0.0
+    best, score = pick_best(query, items, search_type)
+    if best is None or score < 45.0:
+        best = items[0]
+    return items, best, score
+
+
+def preview_candidates(query: str, search_type: str = "track") -> dict:
+    """
+    Search without playing, for low-confidence confirmations.
+
+    Returns {"label", "score", "candidates": [{uri, label, search_type}]}.
+    """
+    try:
+        items, best, score = _search_best(query, search_type)
+        if best is None:
+            return {"label": None, "score": 0.0, "candidates": []}
+        candidates = [
+            {
+                "uri": it.get("uri"),
+                "label": display_label(it, search_type),
+                "search_type": search_type,
+            }
+            for it in items[:5]
+            if it.get("uri")
+        ]
+        return {"label": display_label(best, search_type), "score": score, "candidates": candidates}
+    except Exception as e:
+        print(f"[Player] preview error: {e}")
+        return {"label": None, "score": 0.0, "candidates": []}
+
+
 def resolve_and_play(query: str, search_type: str = "track") -> dict:
     """
     Search top candidates, fuzzy-pick the best one, and play it.
@@ -36,17 +80,9 @@ def resolve_and_play(query: str, search_type: str = "track") -> dict:
         client = _sp()
         device_id = _get_device_id()
 
-        results = client.search(q=query, type=search_type, limit=5)
-        if results is None:
+        items, best, score = _search_best(query, search_type)
+        if best is None:
             return {"success": False, "label": None, "score": 0.0, "candidates": []}
-
-        items = results.get(f"{search_type}s", {}).get("items", [])
-        if not items:
-            return {"success": False, "label": None, "score": 0.0, "candidates": []}
-
-        best, score = pick_best(query, items, search_type)
-        if best is None or score < 45.0:
-            best = items[0]
 
         uri = best.get("uri")
         if not uri:
