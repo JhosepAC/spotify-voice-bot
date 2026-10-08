@@ -52,5 +52,25 @@
   "REPEAT_LAST": [
     "Repitiendo lo último.",
     "De nuevo, entonces."
+  ],
+  "NOW_PLAYING": [
+    "Te digo qué suena.",
+    "A ver qué está sonando."
+  ],
+  "SELECT_INDEX": [
+    "Poniendo esa opción.",
+    "De una, esa."
+  ],
+  "CONFIRM_YES": [
+    "Perfecto.",
+    "Listo."
+  ],
+  "CONFIRM_NO": [
+    "Entendido, cambio.",
+    "Probando con otra."
+  ],
+  "CANCEL": [
+    "Cancelado.",
+    "Lo dejamos ahí."
   ]
 }

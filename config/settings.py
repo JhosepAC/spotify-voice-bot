@@ -63,6 +63,10 @@ OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "true").lower() == "true"
 DUCKING_ENABLED = os.getenv("DUCKING_ENABLED", "true").lower() == "true"
 DUCKING_LEVEL = int(os.getenv("DUCKING_LEVEL", "10"))
 
+# ─── Telemetry ──────────────────────────────────────────────────────────────────
+TELEMETRY_ENABLED = os.getenv("TELEMETRY_ENABLED", "true").lower() == "true"
+SAVE_AUDIO = os.getenv("SAVE_AUDIO", "true").lower() == "true"
+
 # ─── Directories ──────────────────────────────────────────────────────────────
 TEMP_DIR.mkdir(exist_ok=True)
 LOGS_DIR.mkdir(exist_ok=True)
