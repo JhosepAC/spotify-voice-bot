@@ -32,6 +32,11 @@ from spotify.player import (
 )
 
 from spotify.like import like_current_song, unlike_current_song, is_current_song_liked
+from spotify.playlists import (
+    list_my_playlists,
+    create_playlist,
+    add_current_track_to_playlist,
+)
 
 
 def _maybe_confirm(query: str, search_type: str):
@@ -350,6 +355,68 @@ def handle_help():
         "y decirte qué suena. Por ejemplo: pon algo de Shakira, adelanta 30 segundos, "
         "agrega esta a la cola, o pásalo al celular."
     )
+
+
+def handle_create_playlist(playlist_name=None):
+    if not playlist_name:
+        return "¿Cómo quieres llamar la playlist?"
+    result = create_playlist(playlist_name)
+    if not result.get("success"):
+        return f"No pude crear la playlist '{playlist_name}'."
+    return f"Playlist {result.get('label', playlist_name)} creada."
+
+
+def handle_add_to_playlist(playlist_name=None):
+    if not playlist_name:
+        return "¿A qué playlist la agrego?"
+    result = add_current_track_to_playlist(playlist_name)
+    if result.get("missing"):
+        return (
+            f"No encontré la playlist '{playlist_name}'. "
+            f"Di crea la playlist {playlist_name} para crearla."
+        )
+    if not result.get("success"):
+        return "No hay ninguna canción en reproducción."
+    return f"{result.get('track')} agregada a {result.get('playlist')}."
+
+
+def handle_list_playlists():
+    playlists = list_my_playlists(limit=10)
+    if not playlists:
+        return "No tienes playlists todavía. Pídeme crear una."
+    names = [p["name"] for p in playlists[:5]]
+    if len(names) == 1:
+        return f"Tu playlist es {names[0]}."
+    return "Tus playlists son " + ", ".join(names[:-1]) + f" y {names[-1]}."
+
+
+def handle_play_mood(mood=None):
+    if not mood:
+        return "¿Qué mood quieres? Por ejemplo: algo tranquilo para estudiar."
+    result = resolve_and_play(mood, search_type="playlist")
+    if not result.get("success"):
+        return f"No encontré nada para '{mood}'."
+    set_last_candidates(
+        [{**c, "search_type": "playlist"} for c in result.get("candidates", [])],
+        query=mood,
+    )
+    return f"Poniendo {result.get('label', mood)} para ese mood."
+
+
+def handle_play_similar(artist_name=None):
+    if artist_name:
+        result = resolve_artist(artist_name)
+        if not result.get("success"):
+            return f"No encontré nada como '{artist_name}'."
+        return f"Sonando algo como {result.get('label', artist_name)}."
+    current = get_current_track()
+    if not current:
+        return "Pon algo primero y te pongo más de ese estilo."
+    artist = current.get("artist", "")
+    result = resolve_artist(artist)
+    if not result.get("success"):
+        return f"No encontré más de {artist}."
+    return f"Sonando más de {result.get('label', artist)}, parecido a lo que escuchabas."
 
 
 def handle_repeat_last():

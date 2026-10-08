@@ -83,6 +83,13 @@ CASES = [
     ("esta en mis favoritos", "CHECK_LIKE", {}),
     ("que puedes hacer", "HELP", {}),
     ("quien canta esto", "NOW_PLAYING", {}),
+    # Phase 3: playlists + discovery
+    ("crea una playlist llamada gym", "CREATE_PLAYLIST", {"playlist_name": "gym"}),
+    ("agrega esta a la playlist gym", "ADD_TO_PLAYLIST", {"playlist_name": "gym"}),
+    ("cuales son mis playlists", "LIST_PLAYLISTS", {}),
+    ("pon algo tranquilo para estudiar", "PLAY_MOOD", {}),
+    ("pon algo como queen", "PLAY_SIMILAR", {"artist_name": "queen"}),
+    ("mas como esta", "PLAY_SIMILAR", {}),
 ]
 
 # Noisy STT inputs must still resolve (fuzzy robustness)

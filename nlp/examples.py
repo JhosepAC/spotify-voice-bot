@@ -269,6 +269,38 @@ WHO_SINGS = [
     "de quien es esta cancion",
 ]
 
+CREATE_PLAYLIST = [
+    "crea una playlist llamada gym",
+    "hazme una lista de fiesta",
+    "crear playlist para correr",
+]
+
+ADD_TO_PLAYLIST = [
+    "agrega esta a la playlist gym",
+    "guarda esta en mi lista chill",
+    "mete esta cancion en la playlist",
+]
+
+LIST_PLAYLISTS = [
+    "cuales son mis playlists",
+    "muestrame mis listas",
+    "que playlists tengo",
+]
+
+PLAY_MOOD = [
+    "pon algo tranquilo para estudiar",
+    "musica relajante para dormir",
+    "algo de fiesta para animar",
+    "pon jazz suave",
+]
+
+PLAY_SIMILAR = [
+    "pon algo como queen",
+    "mas como esta",
+    "algo parecido a bad bunny",
+    "del mismo estilo",
+]
+
 INTENT_EXAMPLES = {
     "PLAY_TRACK": PLAY_TRACK,
     "PLAY_ARTIST": PLAY_ARTIST,
@@ -306,4 +338,9 @@ INTENT_EXAMPLES = {
     "CHECK_LIKE": CHECK_LIKE,
     "HELP": HELP,
     "WHO_SINGS": WHO_SINGS,
+    "CREATE_PLAYLIST": CREATE_PLAYLIST,
+    "ADD_TO_PLAYLIST": ADD_TO_PLAYLIST,
+    "LIST_PLAYLISTS": LIST_PLAYLISTS,
+    "PLAY_MOOD": PLAY_MOOD,
+    "PLAY_SIMILAR": PLAY_SIMILAR,
 }

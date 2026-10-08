@@ -49,6 +49,11 @@ from commands.intents import (
     CHECK_LIKE,
     HELP,
     WHO_SINGS,
+    CREATE_PLAYLIST,
+    ADD_TO_PLAYLIST,
+    LIST_PLAYLISTS,
+    PLAY_MOOD,
+    PLAY_SIMILAR,
     NOW_PLAYING,
     CONFIRM_YES,
     CONFIRM_NO,
@@ -109,6 +114,9 @@ Responde SOLO con este JSON (sin texto adicional, sin markdown):
   "volume_level": número_entero_o_null,
   "seconds": número_entero_o_null,
   "count": número_entero_o_null,
+  "mode": "track_o_context_o_off_o_null",
+  "mood": "mood_buscado_o_null",
+  "device_name": "nombre_dispositivo_o_null",
   "confidence": 0.0_a_1.0
 }
 
@@ -248,6 +256,7 @@ _CONTROL_INTENTS = frozenset({
     CHECK_LIKE,
     HELP,
     NOW_PLAYING,
+    LIST_PLAYLISTS,
 })
 
 _NUM_WORDS = {
@@ -358,6 +367,24 @@ def _rule_based_classify(text: str) -> dict:
     ):
         return {"intent": UNLIKE_SONG, "entities": {}, "confidence": 0.9}
 
+    add_pl = re.search(
+        r"\b(agrega|agr[ée]gala|a[ñn]ade|a[ñn]adela|guarda|gu[áa]rdala|mete|s[úu]bela)\b"
+        r".{0,40}\b(a la playlist|en la playlist|a mi playlist|a la lista|en la lista)\b",
+        t,
+    )
+    if add_pl:
+        tail = re.split(
+            r"\b(a la playlist|en la playlist|a mi playlist|a la lista|en la lista)\b",
+            t,
+            maxsplit=1,
+        )[-1].strip()
+        name = re.sub(r"^(llamada|llamado|de nombre\s+)?", "", tail).strip()
+        return {
+            "intent": ADD_TO_PLAYLIST,
+            "entities": {"playlist_name": name} if name else {},
+            "confidence": 0.85,
+        }
+
     if _LIKE_RE.search(t):
         return {"intent": LIKE_SONG, "entities": {}, "confidence": 0.9}
 
@@ -384,6 +411,12 @@ def _rule_based_classify(text: str) -> dict:
         t,
     ):
         return {"intent": HELP, "entities": {}, "confidence": 0.9}
+
+    if re.search(
+        r"\b(mis playlists|mis listas|qu[eé] playlists tengo|mu[eé]strame mis|lista mis listas)\b",
+        t,
+    ):
+        return {"intent": LIST_PLAYLISTS, "entities": {}, "confidence": 0.9}
 
     if re.search(
         r"\b(dispositivos|en qu[eé] dispositivo|d[óo]nde est[aá] sonando|d[óo]nde suena|lista de dispositivos)\b",
@@ -477,6 +510,17 @@ def _rule_based_classify(text: str) -> dict:
     # ---- Entity extraction ----
     entities = {}
 
+    create_pl = re.search(
+        r"\b(crea|crear|haz|hazme|nueva)\b.{0,30}\b(playlist|lista)\b",
+        t,
+    )
+    if create_pl:
+        tail = re.split(r"\b(playlist|lista)\b", t, maxsplit=1)[-1].strip()
+        name = re.sub(r"^(llamada|llamado|de nombre|de)\s+", "", tail).strip()
+        if name:
+            entities["playlist_name"] = name
+        return {"intent": CREATE_PLAYLIST, "entities": entities, "confidence": 0.85}
+
     if _ALBUM_RE.search(t):
         # "play album X" -> album_name = X
         album = re.split(r'\b(álbum|album|disco)\b', t, maxsplit=1, flags=re.I)
@@ -499,11 +543,31 @@ def _rule_based_classify(text: str) -> dict:
             entities["artist_name"] = name
         return {"intent": PLAY_ARTIST, "entities": entities, "confidence": 0.8}
 
+    similar = re.search(
+        r"\b(algo como|parecid[oa] a|similar a|del mismo estilo|m[áa]s como esta|igual que esta|como esta)\b",
+        t,
+    )
+    if similar:
+        tail = t[similar.end():].strip()
+        similar_entities: dict = {}
+        if tail and tail not in ("esta", "esto", "eso"):
+            similar_entities["artist_name"] = tail
+        return {"intent": PLAY_SIMILAR, "entities": similar_entities, "confidence": 0.8}
+
     if _PLAY_RE.search(t):
         parts = _TRACK_SPLIT_RE.split(t)
         name = parts[-1].strip() if parts else t
         # Strip leading fillers from previous faulty split ("otra de X" -> "X")
         name = _FILLER_TRACK_PREFIX_RE.sub("", name).strip()
+
+        if re.search(
+            r"\b(relajante|relajad[oa]|tranquil|chill|estudiar|concentrar|concentraci[óo]n|"
+            r"fiesta|gym|entrenar|entrenamiento|correr|dormir|meditar|trabajar|cocinar|"
+            r"animad|rom[áa]ntic|amor|navidad|lluvia|lofi|jazz|electr[óo]nica|rock|salsa|"
+            r"cumbia|reggaet[óo]n|pop)\b",
+            t,
+        ) and not _ARTIST_RE.search(t):
+            return {"intent": PLAY_MOOD, "entities": {"mood": name}, "confidence": 0.75}
 
         de_split = re.split(r'\bde\b', name, maxsplit=1)
         if len(de_split) == 2:
@@ -629,6 +693,10 @@ def classify_intent(text: str) -> dict:
             entities["count"] = int(result["count"])
         if result.get("mode") in ("track", "context", "off"):
             entities["mode"] = result["mode"]
+        if result.get("mood"):
+            entities["mood"] = result["mood"]
+        if result.get("device_name"):
+            entities["device_name"] = result["device_name"]
 
         return {
             "intent": result["intent"],
