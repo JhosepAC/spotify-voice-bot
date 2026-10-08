@@ -72,5 +72,25 @@
   "CANCEL": [
     "Cancelado.",
     "Lo dejamos ahí."
+  ],
+  "SEEK_FORWARD": [
+    "Adelantando.",
+    "Vamos para adelante."
+  ],
+  "SEEK_BACK": [
+    "Retrocediendo.",
+    "Vamos para atrás."
+  ],
+  "RESTART": [
+    "Desde el principio.",
+    "Reiniciando."
+  ],
+  "TOGGLE": [
+    "Listo.",
+    "Cambiando."
+  ],
+  "SKIP_N": [
+    "Saltando.",
+    "Pasando varias."
   ]
 }

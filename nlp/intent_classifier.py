@@ -29,6 +29,11 @@ from commands.intents import (
     VOLUME_UP,
     VOLUME_DOWN,
     SET_VOLUME,
+    SEEK_FORWARD,
+    SEEK_BACK,
+    RESTART,
+    TOGGLE,
+    SKIP_N,
     NOW_PLAYING,
     CONFIRM_YES,
     CONFIRM_NO,
@@ -56,6 +61,11 @@ Intenciones disponibles:
 - VOLUME_UP: subir el volumen
 - VOLUME_DOWN: bajar el volumen
 - SET_VOLUME: establecer volumen a un valor concreto
+- SEEK_FORWARD: adelantar segundos en la canción actual
+- SEEK_BACK: retroceder segundos en la canción actual
+- RESTART: reiniciar la canción desde el principio
+- TOGGLE: alternar pausa/reproducción
+- SKIP_N: saltar N canciones
 - REPEAT_LAST: repetir lo último
 - UNKNOWN: no se entiende la intención
 
@@ -67,6 +77,8 @@ Responde SOLO con este JSON (sin texto adicional, sin markdown):
   "album_name": "nombre del álbum o null",
   "playlist_name": "nombre de la playlist o null",
   "volume_level": número_entero_o_null,
+  "seconds": número_entero_o_null,
+  "count": número_entero_o_null,
   "confidence": 0.0_a_1.0
 }
 
@@ -187,7 +199,29 @@ _CONTROL_INTENTS = frozenset({
     VOLUME_UP,
     VOLUME_DOWN,
     SET_VOLUME,
+    SEEK_FORWARD,
+    SEEK_BACK,
+    RESTART,
+    TOGGLE,
+    SKIP_N,
 })
+
+_NUM_WORDS = {
+    "una": 1, "uno": 1, "un": 1, "dos": 2, "tres": 3, "cuatro": 4,
+    "cinco": 5, "seis": 6, "siete": 7, "ocho": 8, "nueve": 9, "diez": 10,
+    "quince": 15, "veinte": 20, "treinta": 30,
+}
+
+
+def _parse_count(text: str) -> int | None:
+    """Extract a number (digits or Spanish words) from text."""
+    digit = re.search(r"\b(\d{1,3})\b", text)
+    if digit:
+        return int(digit.group(1))
+    for word, value in _NUM_WORDS.items():
+        if re.search(rf"\b{word}\b", text):
+            return value
+    return None
 _ARTIST_RE = re.compile(
     r'\b(algo de|música de|musica de|canciones de|temas de|lo de|artista|pon a)\b',
     re.I
@@ -228,6 +262,35 @@ def _rule_based_classify(text: str) -> dict:
 
     if _PAUSE_RE.search(t):
         return {"intent": PAUSE, "entities": {}, "confidence": 0.9}
+
+    skip_n = re.search(r"\b(salta|sáltate|saltate|pasa)\s+(\d{1,2}|una|uno|dos|tres|cuatro|cinco)\b", t)
+    if skip_n and not has_play_verb:
+        count = _parse_count(skip_n.group(0)) or 1
+        return {"intent": SKIP_N, "entities": {"count": count}, "confidence": 0.9}
+
+    if re.search(r"\b(adelanta|avanza|adelante)\b", t):
+        seconds = _parse_count(t) or 30
+        if re.search(r"\b(minutos?|min)\b", t):
+            seconds = seconds * 60
+        return {"intent": SEEK_FORWARD, "entities": {"seconds": seconds}, "confidence": 0.9}
+
+    if re.search(r"\b(retrocede|para atr[aá]s|ve atr[aá]s)\b", t) or (
+        re.search(r"\b(atr[aá]s|regresa)\b", t)
+        and re.search(r"\b(segundos|seg|minutos|min)\b", t)
+    ):
+        seconds = _parse_count(t) or 15
+        if re.search(r"\b(minutos?|min)\b", t):
+            seconds = seconds * 60
+        return {"intent": SEEK_BACK, "entities": {"seconds": seconds}, "confidence": 0.9}
+
+    if re.search(
+        r"\b(desde el principio|desde cero|del inicio|reinicia|vuelve a empezar|empieza de nuevo)\b",
+        t,
+    ):
+        return {"intent": RESTART, "entities": {}, "confidence": 0.9}
+
+    if re.search(r"\b(alterna|play pause|pausa o sigue|sigue o pausa)\b", t):
+        return {"intent": TOGGLE, "entities": {}, "confidence": 0.9}
 
     # Transport commands win over generic "sigue" resume so that
     # "la que sigue" resolves to NEXT_TRACK, not RESUME.
@@ -312,7 +375,12 @@ def _rule_based_classify(text: str) -> dict:
 
 def _detect_selection(text: str) -> dict | None:
     """Detect disambiguation picks like 'la segunda' or '2'."""
-    match = _SELECT_INDEX_RE.search(text.lower().strip())
+    lower = text.lower().strip()
+    # A count with a skip verb is not a pick ("salta 3 canciones").
+    # A bare pick ("la segunda", "pon la 3") still selects a candidate.
+    if re.search(r"\b(salta|sáltate|saltate|pasa)\s+(\d{1,2}|una|uno|dos|tres|cuatro|cinco)\b", lower):
+        return None
+    match = _SELECT_INDEX_RE.search(lower)
     if not match:
         return None
     token = match.group(2).lower()
@@ -403,6 +471,10 @@ def classify_intent(text: str) -> dict:
             entities["playlist_name"] = result["playlist_name"]
         if result.get("volume_level") is not None:
             entities["volume_level"] = int(result["volume_level"])
+        if result.get("seconds") is not None:
+            entities["seconds"] = int(result["seconds"])
+        if result.get("count") is not None:
+            entities["count"] = int(result["count"])
 
         return {
             "intent": result["intent"],

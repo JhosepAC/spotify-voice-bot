@@ -12,6 +12,11 @@ from spotify.player import (
     resume_playback,
     next_track,
     previous_track,
+    seek_forward,
+    seek_back,
+    restart_track,
+    toggle_playback,
+    skip_n,
     set_volume,
     get_current_volume,
     get_current_track,
@@ -175,6 +180,47 @@ def handle_set_volume(level):
     level = max(0, min(100, int(level)))
     set_volume(level)
     return f"Volumen ajustado a {level}."
+
+
+def handle_seek_forward(seconds=None):
+    seconds = int(seconds) if seconds else 30
+    pos = seek_forward(seconds)
+    if pos < 0:
+        return "No pude adelantar. ¿Hay algo sonando?"
+    return f"Adelantados {seconds} segundos."
+
+
+def handle_seek_back(seconds=None):
+    seconds = int(seconds) if seconds else 15
+    pos = seek_back(seconds)
+    if pos < 0:
+        return "No pude retroceder. ¿Hay algo sonando?"
+    return f"Retrocedidos {seconds} segundos."
+
+
+def handle_restart():
+    if restart_track():
+        return "De nuevo desde el principio."
+    return "No pude reiniciar la canción."
+
+
+def handle_toggle():
+    result = toggle_playback()
+    if result == "paused":
+        return "Pausado."
+    if result == "playing":
+        return "Sigamos con la música."
+    return "No hay nada sonando para alternar."
+
+
+def handle_skip_n(count=None):
+    count = max(1, min(20, int(count) if count else 1))
+    done = skip_n(count)
+    if done <= 0:
+        return "No pude saltar canciones."
+    if done == 1:
+        return "Siguiente canción."
+    return f"Saltadas {done} canciones."
 
 
 def handle_repeat_last():
