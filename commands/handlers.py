@@ -1,18 +1,17 @@
-"""
-Command handlers: map intents to Spotify actions.
-"""
+"""Command handlers: map intents to Spotify actions."""
 
 import context.state as state
 
 from spotify.player import (
-    play_track,
-    play_artist,
+    resolve_and_play,
+    resolve_artist,
     pause_playback,
     resume_playback,
     next_track,
     previous_track,
     set_volume,
     get_current_volume,
+    get_current_track,
 )
 
 from spotify.like import like_current_song
@@ -21,22 +20,21 @@ from spotify.like import like_current_song
 def handle_play_track(track_name, artist_name=None):
     """
     Play a specific track, optionally filtered by artist.
+    Speaks back the API-verified title, not the raw transcript.
     """
-    if not track_name:
+    if not track_name and not artist_name:
         return "No entendí el nombre de la canción."
 
-    query = track_name
+    query = track_name or ""
     if artist_name:
-        query = f"{track_name} {artist_name}"
+        query = f"{query} {artist_name}".strip()
 
-    success = play_track(query)
+    result = resolve_and_play(query, search_type="track")
+    if not result.get("success"):
+        spoken = query or "esa canción"
+        return f"No encontré '{spoken}' en Spotify."
 
-    if not success:
-        return f"No encontré '{track_name}' en Spotify."
-
-    if artist_name:
-        return f"Reproduciendo {track_name} de {artist_name}."
-    return f"Reproduciendo {track_name}."
+    return f"Reproduciendo {result.get('label', query)}."
 
 
 def handle_play_artist(artist_name):
@@ -46,12 +44,11 @@ def handle_play_artist(artist_name):
     if not artist_name:
         return "No entendí el nombre del artista."
 
-    success = play_artist(artist_name)
-
-    if not success:
+    result = resolve_artist(artist_name)
+    if not result.get("success"):
         return f"No encontré al artista '{artist_name}'."
 
-    return f"Reproduciendo música de {artist_name}."
+    return f"Reproduciendo música de {result.get('label', artist_name)}."
 
 
 def handle_play_album(album_name):
@@ -61,12 +58,11 @@ def handle_play_album(album_name):
     if not album_name:
         return "Falta el nombre del álbum."
 
-    success = play_track(album_name, search_type="album")
-
-    if not success:
+    result = resolve_and_play(album_name, search_type="album")
+    if not result.get("success"):
         return f"No encontré el álbum '{album_name}'."
 
-    return f"Reproduciendo el álbum {album_name}."
+    return f"Reproduciendo el álbum {result.get('label', album_name)}."
 
 
 def handle_play_playlist(playlist_name):
@@ -76,12 +72,11 @@ def handle_play_playlist(playlist_name):
     if not playlist_name:
         return "Falta el nombre de la playlist."
 
-    success = play_track(playlist_name, search_type="playlist")
-
-    if not success:
+    result = resolve_and_play(playlist_name, search_type="playlist")
+    if not result.get("success"):
         return f"No encontré la playlist '{playlist_name}'."
 
-    return f"Reproduciendo la playlist {playlist_name}."
+    return f"Reproduciendo la playlist {result.get('label', playlist_name)}."
 
 
 def handle_pause():
@@ -114,6 +109,14 @@ def handle_like_song():
         name = result.get("track_name", "esta canción")
         return f"¡{name} agregada a tus favoritos!"
     return "No hay ninguna canción en reproducción."
+
+
+def handle_now_playing():
+    """Tell the user what is currently playing (verified by API)."""
+    track = get_current_track()
+    if not track:
+        return "No hay nada sonando ahora mismo."
+    return f"Suena {track.get('name')} de {track.get('artist')}."
 
 
 def handle_volume_up():
