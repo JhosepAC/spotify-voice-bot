@@ -111,7 +111,7 @@ Micrófono
     ↓
 VAD (energía adaptativa)  ← detecta cuándo hablas
     ↓
-Faster-Whisper (modelo small, CPU)  ← transcribe a texto
+Faster-Whisper (modelo small, CPU, beam 1)  ← transcribe a texto
     ↓
 Ollama Phi-3 (LLM local)  ← entiende la intención + extrae entidades
     ↓  (fallback: clasificador por reglas si Ollama no responde)
