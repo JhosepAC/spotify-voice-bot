@@ -8,6 +8,7 @@ import json
 import os
 
 from voice.command_listener import listen_command
+from voice.ducking import audio_ducked
 from voice.tts import speak
 from nlp.command_builder import build_command
 from commands.router import route_command
@@ -59,7 +60,8 @@ def run_voice_assistant():
         try:
             print("\nEscuchando...")
 
-            command_text = listen_command()
+            with audio_ducked():
+                command_text = listen_command()
 
             if not command_text:
                 continue
