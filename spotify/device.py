@@ -1,20 +1,21 @@
-from typing import Dict, Any
+"""Spotify device management."""
 
-"""
-Spotify device management.
-"""
+from typing import Any, Optional
 
 from spotify.auth import get_spotify_client
 
-sp = get_spotify_client()
+
+def _sp():
+    """Lazy client so import never needs credentials."""
+    return get_spotify_client()
 
 
-def get_active_device() -> dict[str, Any] | None:
+def get_active_device() -> Optional[dict[str, Any]]:
     """
     Get the first active Spotify device.
     """
     try:
-        devices = sp.devices()
+        devices = _sp().devices()
 
         if devices is None:
             return None
