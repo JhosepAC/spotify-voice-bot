@@ -154,6 +154,38 @@ def test_help_and_who_sings():
     assert "Test Song" in route_command("WHO_SINGS", {})
 
 
+def test_playlists_crud():
+    use_fake()
+    import spotify.playlists as playlists
+
+    playlists._sp = lambda: FAKE
+    from commands.router import route_command
+
+    listing = route_command("LIST_PLAYLISTS", {})
+    assert "Gym" in listing and "Chill" in listing, listing
+    created = route_command("CREATE_PLAYLIST", {"playlist_name": "Run"})
+    assert "Run" in created, created
+    assert FAKE.called("playlist_create")
+    added = route_command("ADD_TO_PLAYLIST", {"playlist_name": "Gym"})
+    assert "Gym" in added, added
+    assert FAKE.called("playlist_add")[0][1] == "p1"
+    missing = route_command("ADD_TO_PLAYLIST", {"playlist_name": "Inexistente"})
+    assert "crea la playlist" in missing.lower(), missing
+
+
+def test_mood_and_similar():
+    use_fake()
+    import spotify.playlists as playlists
+
+    playlists._sp = lambda: FAKE
+    from commands.router import route_command
+
+    mood = route_command("PLAY_MOOD", {"mood": "chill"})
+    assert "chill" in mood.lower(), mood
+    similar = route_command("PLAY_SIMILAR", {})
+    assert "Test Artist" in similar, similar
+
+
 def main() -> int:
     tests = [
         test_seek_forward_moves_position,
@@ -169,6 +201,8 @@ def main() -> int:
         test_devices_list_and_transfer,
         test_unlike_and_check_like,
         test_help_and_who_sings,
+        test_playlists_crud,
+        test_mood_and_similar,
     ]
     failures = 0
     for fn in tests:

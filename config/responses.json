@@ -152,5 +152,25 @@
   "WHO_SINGS": [
     "Te digo quién canta.",
     "A ver quién es."
+  ],
+  "CREATE_PLAYLIST": [
+    "Creando la playlist.",
+    "Listo, nueva playlist."
+  ],
+  "ADD_TO_PLAYLIST": [
+    "Agregándola.",
+    "Guardada en tu playlist."
+  ],
+  "LIST_PLAYLISTS": [
+    "Buscando tus playlists.",
+    "A ver qué tienes."
+  ],
+  "PLAY_MOOD": [
+    "Buscando ese mood.",
+    "Algo para la ocasión."
+  ],
+  "PLAY_SIMILAR": [
+    "Buscando algo parecido.",
+    "Más de ese estilo."
   ]
 }

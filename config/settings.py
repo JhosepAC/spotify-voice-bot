@@ -19,7 +19,11 @@ SPOTIFY_SCOPES = (
     "user-modify-playback-state "
     "user-library-modify "
     "user-library-read "
-    "playlist-read-private"
+    "playlist-read-private "
+    "playlist-modify-public "
+    "playlist-modify-private "
+    "user-top-read "
+    "user-read-recently-played"
 )
 SPOTIFY_CACHE_PATH = ".spotify_cache"
 

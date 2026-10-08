@@ -46,6 +46,11 @@ from commands.intents import (
     CHECK_LIKE,
     HELP,
     WHO_SINGS,
+    CREATE_PLAYLIST,
+    ADD_TO_PLAYLIST,
+    LIST_PLAYLISTS,
+    PLAY_MOOD,
+    PLAY_SIMILAR,
     NOW_PLAYING,
     CONFIRM_YES,
     CONFIRM_NO,
@@ -87,6 +92,11 @@ from commands.handlers import (
     handle_list_devices,
     handle_transfer_device,
     handle_help,
+    handle_create_playlist,
+    handle_add_to_playlist,
+    handle_list_playlists,
+    handle_play_mood,
+    handle_play_similar,
 )
 
 from spotify.player import play_candidate
@@ -276,5 +286,20 @@ def route_command(intent: str, entities: Optional[Dict[str, Any]] = None) -> str
 
     if intent == WHO_SINGS:
         return handle_now_playing()
+
+    if intent == CREATE_PLAYLIST:
+        return handle_create_playlist(entities.get("playlist_name"))
+
+    if intent == ADD_TO_PLAYLIST:
+        return handle_add_to_playlist(entities.get("playlist_name"))
+
+    if intent == LIST_PLAYLISTS:
+        return handle_list_playlists()
+
+    if intent == PLAY_MOOD:
+        return handle_play_mood(entities.get("mood"))
+
+    if intent == PLAY_SIMILAR:
+        return handle_play_similar(entities.get("artist_name"))
 
     return "No entendí ese comando."
