@@ -70,6 +70,10 @@ SAVE_AUDIO = os.getenv("SAVE_AUDIO", "true").lower() == "true"
 # ─── Spotify network ──────────────────────────────────────────────────────────
 SPOTIFY_TIMEOUT = int(os.getenv("SPOTIFY_TIMEOUT", "10"))
 
+# ─── Slow-action acknowledgement ──────────────────────────────────────────────
+SLOW_ACK_ENABLED = os.getenv("SLOW_ACK_ENABLED", "true").lower() == "true"
+SLOW_ACK_SECONDS = float(os.getenv("SLOW_ACK_SECONDS", "1.2"))
+
 # ─── Directories ──────────────────────────────────────────────────────────────
 TEMP_DIR.mkdir(exist_ok=True)
 LOGS_DIR.mkdir(exist_ok=True)
