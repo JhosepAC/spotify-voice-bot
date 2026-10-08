@@ -172,6 +172,47 @@ SKIP_N = [
     "saltate 5",
 ]
 
+SHUFFLE_ON = [
+    "pon en aleatorio",
+    "activa el aleatorio",
+    "mezcla las canciones",
+    "con shuffle",
+]
+
+SHUFFLE_OFF = [
+    "quita el aleatorio",
+    "desactiva la mezcla",
+    "sin aleatorio",
+]
+
+SHUFFLE_TOGGLE = [
+    "aleatorio",
+    "cambia el aleatorio",
+    "shuffle",
+]
+
+REPEAT_MODE = [
+    "repite esta cancion",
+    "repite todo",
+    "pon en bucle",
+    "no repitas",
+    "repite otra vez",
+]
+
+QUEUE_ADD = [
+    "agrega esta a la cola",
+    "pon esa cancion en la cola",
+    "mete la siguiente a la cola",
+    "añade un tema a la cola",
+]
+
+QUEUE_LIST = [
+    "que hay en la cola",
+    "muestra la cola",
+    "cual sigue en la cola",
+    "dime la cola",
+]
+
 INTENT_EXAMPLES = {
     "PLAY_TRACK": PLAY_TRACK,
     "PLAY_ARTIST": PLAY_ARTIST,
@@ -194,4 +235,10 @@ INTENT_EXAMPLES = {
     "RESTART": RESTART,
     "TOGGLE": TOGGLE,
     "SKIP_N": SKIP_N,
+    "SHUFFLE_ON": SHUFFLE_ON,
+    "SHUFFLE_OFF": SHUFFLE_OFF,
+    "SHUFFLE_TOGGLE": SHUFFLE_TOGGLE,
+    "REPEAT_MODE": REPEAT_MODE,
+    "QUEUE_ADD": QUEUE_ADD,
+    "QUEUE_LIST": QUEUE_LIST,
 }

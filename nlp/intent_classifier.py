@@ -34,6 +34,12 @@ from commands.intents import (
     RESTART,
     TOGGLE,
     SKIP_N,
+    SHUFFLE_ON,
+    SHUFFLE_OFF,
+    SHUFFLE_TOGGLE,
+    REPEAT_MODE,
+    QUEUE_ADD,
+    QUEUE_LIST,
     NOW_PLAYING,
     CONFIRM_YES,
     CONFIRM_NO,
@@ -66,6 +72,12 @@ Intenciones disponibles:
 - RESTART: reiniciar la canción desde el principio
 - TOGGLE: alternar pausa/reproducción
 - SKIP_N: saltar N canciones
+- SHUFFLE_ON: activar modo aleatorio
+- SHUFFLE_OFF: desactivar modo aleatorio
+- SHUFFLE_TOGGLE: alternar modo aleatorio
+- REPEAT_MODE: cambiar modo de repetición (track/context/off)
+- QUEUE_ADD: agregar una canción a la cola
+- QUEUE_LIST: decir qué hay en la cola
 - REPEAT_LAST: repetir lo último
 - UNKNOWN: no se entiende la intención
 
@@ -204,6 +216,11 @@ _CONTROL_INTENTS = frozenset({
     RESTART,
     TOGGLE,
     SKIP_N,
+    SHUFFLE_ON,
+    SHUFFLE_OFF,
+    SHUFFLE_TOGGLE,
+    REPEAT_MODE,
+    QUEUE_LIST,
 })
 
 _NUM_WORDS = {
@@ -294,6 +311,11 @@ def _rule_based_classify(text: str) -> dict:
 
     # Transport commands win over generic "sigue" resume so that
     # "la que sigue" resolves to NEXT_TRACK, not RESUME.
+    if re.search(r"\bcola\b", t) and re.search(
+        r"\b(qu[eé] hay|muestra|lista|dime|ense[ñn]a|cu[aá]l sigue|que sigue)\b", t
+    ):
+        return {"intent": QUEUE_LIST, "entities": {}, "confidence": 0.9}
+
     if _NEXT_RE.search(t) and not has_play_verb:
         return {"intent": NEXT_TRACK, "entities": {}, "confidence": 0.9}
 
@@ -305,6 +327,22 @@ def _rule_based_classify(text: str) -> dict:
 
     if _LIKE_RE.search(t):
         return {"intent": LIKE_SONG, "entities": {}, "confidence": 0.9}
+
+    if re.search(r"\b(aleatorio|shuffle|mezcla|desorden)\b", t):
+        if re.search(r"\b(quita|desactiva|sin|apaga|desconecta)\b", t):
+            return {"intent": SHUFFLE_OFF, "entities": {}, "confidence": 0.9}
+        if re.search(r"\b(pon|activa|con|s[ií]|ponle|conecta)\b", t):
+            return {"intent": SHUFFLE_ON, "entities": {}, "confidence": 0.9}
+        return {"intent": SHUFFLE_TOGGLE, "entities": {}, "confidence": 0.85}
+
+    if re.search(r"\b(repit\w*|bucle|loop|otra vez)\b", t):
+        if re.search(r"\b(todo|toda|lista|[aá]lbum|cola|disco)\b", t):
+            mode = "context"
+        elif re.search(r"\b(no|desactiva|quita|off|para de repetir|deja de repetir)\b", t):
+            mode = "off"
+        else:
+            mode = "track"
+        return {"intent": REPEAT_MODE, "entities": {"mode": mode}, "confidence": 0.9}
 
     if _VOL_UP_RE.search(t):
         return {"intent": VOLUME_UP, "entities": {}, "confidence": 0.9}
@@ -321,6 +359,29 @@ def _rule_based_classify(text: str) -> dict:
             "entities": {"volume_level": level},
             "confidence": 0.85,
         }
+
+    queue_add = re.search(
+        r"\b(agrega|agr[ée]gala|a[ñn]ade|a[ñn]adela|mete|pon|ponme)\b.{0,50}\b(cola|fila)\b",
+        t,
+    )
+    if queue_add:
+        left = re.split(r"\b(cola|fila)\b", t, maxsplit=1)[0]
+        left = re.sub(
+            r"\b(agrega|agr[ée]gala|a[ñn]ade|a[ñn]adela|mete|pon|ponme|a la|en la|a|en|esta|esa|un|una|tema|canci[óo]n)\b",
+            " ",
+            left,
+        )
+        left = re.sub(r"\s+", " ", left).strip()
+        queue_entities: dict = {}
+        de_split = re.split(r"\bde\b", left, maxsplit=1)
+        if len(de_split) == 2:
+            if de_split[0].strip():
+                queue_entities["track_name"] = de_split[0].strip()
+            if de_split[1].strip():
+                queue_entities["artist_name"] = de_split[1].strip()
+        elif left:
+            queue_entities["track_name"] = left
+        return {"intent": QUEUE_ADD, "entities": queue_entities, "confidence": 0.8}
 
     # ---- Entity extraction ----
     entities = {}
@@ -475,6 +536,8 @@ def classify_intent(text: str) -> dict:
             entities["seconds"] = int(result["seconds"])
         if result.get("count") is not None:
             entities["count"] = int(result["count"])
+        if result.get("mode") in ("track", "context", "off"):
+            entities["mode"] = result["mode"]
 
         return {
             "intent": result["intent"],

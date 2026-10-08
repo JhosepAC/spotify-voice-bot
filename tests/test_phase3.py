@@ -82,6 +82,37 @@ def test_router_transport_wiring():
     assert "principio" in route_command("RESTART", {}).lower()
 
 
+def test_shuffle_toggle_flips_state():
+    use_fake()
+    from commands.router import route_command
+
+    FAKE.playback["shuffle_state"] = False
+    assert "activado" in route_command("SHUFFLE_TOGGLE", {}).lower()
+    assert FAKE.called("shuffle")[-1][1] is True
+    assert "desactivado" in route_command("SHUFFLE_TOGGLE", {}).lower()
+
+
+def test_repeat_modes():
+    use_fake()
+    from commands.router import route_command
+
+    assert "esta canci" in route_command("REPEAT_MODE", {"mode": "track"}).lower()
+    assert "todo" in route_command("REPEAT_MODE", {"mode": "context"}).lower()
+    assert "desactivada" in route_command("REPEAT_MODE", {"mode": "off"}).lower()
+    assert [c[1] for c in FAKE.called("repeat")] == ["track", "context", "off"]
+
+
+def test_queue_add_and_list():
+    use_fake()
+    from commands.router import route_command
+
+    msg = route_command("QUEUE_ADD", {"track_name": "despacito"})
+    assert "cola" in msg.lower()
+    assert FAKE.called("add_to_queue")
+    listing = route_command("QUEUE_LIST", {})
+    assert "Queued 1" in listing and "Queued 3" in listing, listing
+
+
 def main() -> int:
     tests = [
         test_seek_forward_moves_position,
@@ -90,6 +121,9 @@ def main() -> int:
         test_toggle_pauses_and_resumes,
         test_skip_n_advances_n_tracks,
         test_router_transport_wiring,
+        test_shuffle_toggle_flips_state,
+        test_repeat_modes,
+        test_queue_add_and_list,
     ]
     failures = 0
     for fn in tests:

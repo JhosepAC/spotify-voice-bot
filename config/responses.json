@@ -92,5 +92,29 @@
   "SKIP_N": [
     "Saltando.",
     "Pasando varias."
+  ],
+  "SHUFFLE_ON": [
+    "Aleatorio activado.",
+    "Mezclando."
+  ],
+  "SHUFFLE_OFF": [
+    "Aleatorio desactivado.",
+    "En orden normal."
+  ],
+  "SHUFFLE_TOGGLE": [
+    "Cambiando el aleatorio.",
+    "Listo."
+  ],
+  "REPEAT_MODE": [
+    "Repetición ajustada.",
+    "Listo, repitiendo."
+  ],
+  "QUEUE_ADD": [
+    "Agregada a la cola.",
+    "En la cola, anotada."
+  ],
+  "QUEUE_LIST": [
+    "Te digo la cola.",
+    "A ver qué sigue."
   ]
 }

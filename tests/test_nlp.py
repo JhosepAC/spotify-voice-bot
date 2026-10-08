@@ -62,6 +62,16 @@ CASES = [
     ("alterna", "TOGGLE", {}),
     ("salta 3 canciones", "SKIP_N", {"count": 3}),
     ("pasa 2 temas", "SKIP_N", {"count": 2}),
+    # Phase 3: modes + queue
+    ("pon en aleatorio", "SHUFFLE_ON", {}),
+    ("quita el aleatorio", "SHUFFLE_OFF", {}),
+    ("aleatorio", "SHUFFLE_TOGGLE", {}),
+    ("repite esta cancion", "REPEAT_MODE", {"mode": "track"}),
+    ("repite todo", "REPEAT_MODE", {"mode": "context"}),
+    ("no repitas", "REPEAT_MODE", {"mode": "off"}),
+    ("agrega esta a la cola", "QUEUE_ADD", {}),
+    ("pon despacito en la cola", "QUEUE_ADD", {"track_name": "despacito"}),
+    ("que hay en la cola", "QUEUE_LIST", {}),
 ]
 
 # Noisy STT inputs must still resolve (fuzzy robustness)
