@@ -40,6 +40,15 @@ from commands.intents import (
     REPEAT_MODE,
     QUEUE_ADD,
     QUEUE_LIST,
+    MUTE,
+    UNMUTE,
+    VOLUME_STATUS,
+    LIST_DEVICES,
+    TRANSFER_DEVICE,
+    UNLIKE_SONG,
+    CHECK_LIKE,
+    HELP,
+    WHO_SINGS,
     NOW_PLAYING,
     CONFIRM_YES,
     CONFIRM_NO,
@@ -78,6 +87,15 @@ Intenciones disponibles:
 - REPEAT_MODE: cambiar modo de repetición (track/context/off)
 - QUEUE_ADD: agregar una canción a la cola
 - QUEUE_LIST: decir qué hay en la cola
+- MUTE: silenciar por completo
+- UNMUTE: reactivar el sonido
+- VOLUME_STATUS: decir el volumen actual
+- LIST_DEVICES: listar dispositivos disponibles
+- TRANSFER_DEVICE: pasar la música a otro dispositivo
+- UNLIKE_SONG: quitar el me gusta actual
+- CHECK_LIKE: decir si la actual está en favoritos
+- HELP: explicar qué puede hacer
+- WHO_SINGS: decir quién canta (igual que NOW_PLAYING)
 - REPEAT_LAST: repetir lo último
 - UNKNOWN: no se entiende la intención
 
@@ -221,6 +239,15 @@ _CONTROL_INTENTS = frozenset({
     SHUFFLE_TOGGLE,
     REPEAT_MODE,
     QUEUE_LIST,
+    MUTE,
+    UNMUTE,
+    VOLUME_STATUS,
+    LIST_DEVICES,
+    TRANSFER_DEVICE,
+    UNLIKE_SONG,
+    CHECK_LIKE,
+    HELP,
+    NOW_PLAYING,
 })
 
 _NUM_WORDS = {
@@ -325,8 +352,72 @@ def _rule_based_classify(text: str) -> dict:
     if _RESUME_RE.search(t) and not has_play_verb:
         return {"intent": RESUME, "entities": {}, "confidence": 0.85}
 
+    if re.search(
+        r"\b(no me gusta|ya no me gusta|quitale el like|qu[ií]tala de favoritos|dislike)\b",
+        t,
+    ):
+        return {"intent": UNLIKE_SONG, "entities": {}, "confidence": 0.9}
+
     if _LIKE_RE.search(t):
         return {"intent": LIKE_SONG, "entities": {}, "confidence": 0.9}
+
+    if re.search(
+        r"\b(est[aá] en (mis )?favoritos|ya le di like|tiene like|la tengo guardada|est[aá] guardada)\b",
+        t,
+    ):
+        return {"intent": CHECK_LIKE, "entities": {}, "confidence": 0.85}
+
+    if re.search(
+        r"\b(qu[ií][eé]n canta|qui[eé]n es el artista|de qui[eé]n es esta|c[óo]mo se llama esta)\b",
+        t,
+    ):
+        return {"intent": NOW_PLAYING, "entities": {}, "confidence": 0.9}
+
+    if re.search(
+        r"\b(qu[eé] suena|qu[eé] est[aá] sonando|qu[eé] canci[óo]n es esta|c[óo]mo se llama la canci[óo]n)\b",
+        t,
+    ):
+        return {"intent": NOW_PLAYING, "entities": {}, "confidence": 0.9}
+
+    if re.search(
+        r"\b(ayuda|qu[eé] puedes hacer|qu[eé] sabes hacer|comandos|instrucciones|que puedo pedirte)\b",
+        t,
+    ):
+        return {"intent": HELP, "entities": {}, "confidence": 0.9}
+
+    if re.search(
+        r"\b(dispositivos|en qu[eé] dispositivo|d[óo]nde est[aá] sonando|d[óo]nde suena|lista de dispositivos)\b",
+        t,
+    ):
+        return {"intent": LIST_DEVICES, "entities": {}, "confidence": 0.9}
+
+    transfer = re.search(
+        r"\b(pasa|p[aá]salo|cambia|transfiere|ponlo|suena en)\b.{0,40}\b(celular|m[óo]vil|computadora|ordenador|pc|tablet|parlante|altavoz|bocina|tele|tv|tel[ée]fono|dispositivo|equipo|aqu[íi]|ac[áa])\b",
+        t,
+    )
+    if transfer:
+        name = re.search(r"\b(a|al|en|en el|en la)\s+(.+)$", t)
+        device_name = name.group(2).strip() if name else transfer.group(0)
+        return {
+            "intent": TRANSFER_DEVICE,
+            "entities": {"device_name": device_name},
+            "confidence": 0.85,
+        }
+
+    if re.search(r"\b(mute|silenciar|enmudece|apaga el sonido|sin sonido)\b", t):
+        return {"intent": MUTE, "entities": {}, "confidence": 0.9}
+
+    if re.search(
+        r"\b(unmute|activa el sonido|quita el silencio|desilencia|devuelve el sonido|vuelve el sonido|pon sonido)\b",
+        t,
+    ):
+        return {"intent": UNMUTE, "entities": {}, "confidence": 0.9}
+
+    if re.search(
+        r"\b(en qu[eé] volumen|cu[aá]l es el volumen|a qu[eé] volumen|dime el volumen|c[óo]mo est[aá] el volumen)\b",
+        t,
+    ):
+        return {"intent": VOLUME_STATUS, "entities": {}, "confidence": 0.9}
 
     if re.search(r"\b(aleatorio|shuffle|mezcla|desorden)\b", t):
         if re.search(r"\b(quita|desactiva|sin|apaga|desconecta)\b", t):

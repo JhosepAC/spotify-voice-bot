@@ -213,6 +213,62 @@ QUEUE_LIST = [
     "dime la cola",
 ]
 
+MUTE = [
+    "silenciar",
+    "mute",
+    "apaga el sonido",
+    "sin sonido por favor",
+]
+
+UNMUTE = [
+    "activa el sonido",
+    "quita el silencio",
+    "devuelve el sonido",
+]
+
+VOLUME_STATUS = [
+    "en que volumen esta",
+    "cual es el volumen",
+    "dime el volumen",
+]
+
+LIST_DEVICES = [
+    "que dispositivos hay",
+    "donde esta sonando",
+    "en que dispositivo suena",
+]
+
+TRANSFER_DEVICE = [
+    "pasalo al celular",
+    "cambia a la computadora",
+    "transfiere al parlante",
+    "ponlo en la tablet",
+]
+
+UNLIKE_SONG = [
+    "no me gusta esta",
+    "quitala de favoritos",
+    "ya no me gusta",
+]
+
+CHECK_LIKE = [
+    "esta en mis favoritos",
+    "la tengo guardada",
+    "ya le di like",
+]
+
+HELP = [
+    "ayuda",
+    "que puedes hacer",
+    "dime los comandos",
+]
+
+WHO_SINGS = [
+    "quien canta",
+    "quien es el artista",
+    "de quien es esta cancion",
+]
+
 INTENT_EXAMPLES = {
     "PLAY_TRACK": PLAY_TRACK,
     "PLAY_ARTIST": PLAY_ARTIST,
@@ -241,4 +297,13 @@ INTENT_EXAMPLES = {
     "REPEAT_MODE": REPEAT_MODE,
     "QUEUE_ADD": QUEUE_ADD,
     "QUEUE_LIST": QUEUE_LIST,
+    "MUTE": MUTE,
+    "UNMUTE": UNMUTE,
+    "VOLUME_STATUS": VOLUME_STATUS,
+    "LIST_DEVICES": LIST_DEVICES,
+    "TRANSFER_DEVICE": TRANSFER_DEVICE,
+    "UNLIKE_SONG": UNLIKE_SONG,
+    "CHECK_LIKE": CHECK_LIKE,
+    "HELP": HELP,
+    "WHO_SINGS": WHO_SINGS,
 }

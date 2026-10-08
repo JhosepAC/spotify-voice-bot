@@ -11,5 +11,8 @@ LAST_PLAYLIST = None
 LAST_CANDIDATES = []
 LAST_QUERY = None
 
+# Volume before muting, restored on unmute.
+LAST_VOLUME = None
+
 # Short turn history for debugging/telemetry: [{"text": str, "intent": str}]
 TURN_HISTORY = []

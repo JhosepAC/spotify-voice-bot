@@ -22,12 +22,16 @@ from spotify.player import (
     set_repeat_mode,
     queue_track,
     get_queue_labels,
+    mute,
+    unmute,
+    list_device_names,
+    transfer_to_device,
     set_volume,
     get_current_volume,
     get_current_track,
 )
 
-from spotify.like import like_current_song
+from spotify.like import like_current_song, unlike_current_song, is_current_song_liked
 
 
 def _maybe_confirm(query: str, search_type: str):
@@ -277,6 +281,75 @@ def handle_queue_list():
     if len(labels) == 1:
         return f"En la cola sigue {labels[0]}."
     return "En la cola siguen " + ", ".join(labels[:-1]) + f" y {labels[-1]}."
+
+
+def handle_mute():
+    previous = mute()
+    if previous is None:
+        return "No pude silenciar."
+    return "Silenciado."
+
+
+def handle_unmute():
+    level = unmute()
+    if level < 0:
+        return "No pude reactivar el sonido."
+    return f"Sonido de vuelta al {level}."
+
+
+def handle_volume_status():
+    level = get_current_volume()
+    return f"El volumen está al {level}."
+
+
+def handle_unlike_song():
+    try:
+        result = unlike_current_song()
+    except Exception:
+        return "No hay ninguna canción en reproducción."
+    if result:
+        name = result.get("track_name", "esa canción")
+        return f"{name} quitada de tus favoritos."
+    return "No hay ninguna canción en reproducción."
+
+
+def handle_check_like():
+    try:
+        if is_current_song_liked():
+            return "Esta ya está en tus favoritos."
+        return "Esta aún no está en tus favoritos."
+    except Exception:
+        return "No hay ninguna canción en reproducción."
+
+
+def handle_list_devices():
+    devices = list_device_names()
+    if not devices:
+        return "No veo ningún dispositivo. Abre Spotify en alguno primero."
+    names = [d["name"] for d in devices]
+    active = next((d["name"] for d in devices if d.get("active")), None)
+    listing = ", ".join(names)
+    if active:
+        return f"Dispositivos: {listing}. Está sonando en {active}."
+    return f"Dispositivos: {listing}."
+
+
+def handle_transfer_device(device_name=None):
+    if not device_name:
+        return "¿A qué dispositivo lo paso?"
+    result = transfer_to_device(device_name)
+    if not result.get("success"):
+        return f"No encontré el dispositivo '{device_name}'."
+    return f"Pasando la música a {result.get('label', device_name)}."
+
+
+def handle_help():
+    return (
+        "Puedo poner canciones, artistas, álbumes y playlists, pausar, seguir, "
+        "adelantar, repetir, aleatorio, cola, volumen, dispositivos, favoritos "
+        "y decirte qué suena. Por ejemplo: pon algo de Shakira, adelanta 30 segundos, "
+        "agrega esta a la cola, o pásalo al celular."
+    )
 
 
 def handle_repeat_last():

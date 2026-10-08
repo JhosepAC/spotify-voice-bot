@@ -37,6 +37,15 @@ from commands.intents import (
     REPEAT_MODE,
     QUEUE_ADD,
     QUEUE_LIST,
+    MUTE,
+    UNMUTE,
+    VOLUME_STATUS,
+    LIST_DEVICES,
+    TRANSFER_DEVICE,
+    UNLIKE_SONG,
+    CHECK_LIKE,
+    HELP,
+    WHO_SINGS,
     NOW_PLAYING,
     CONFIRM_YES,
     CONFIRM_NO,
@@ -70,6 +79,14 @@ from commands.handlers import (
     handle_repeat_mode,
     handle_queue_add,
     handle_queue_list,
+    handle_mute,
+    handle_unmute,
+    handle_volume_status,
+    handle_unlike_song,
+    handle_check_like,
+    handle_list_devices,
+    handle_transfer_device,
+    handle_help,
 )
 
 from spotify.player import play_candidate
@@ -232,5 +249,32 @@ def route_command(intent: str, entities: Optional[Dict[str, Any]] = None) -> str
 
     if intent == QUEUE_LIST:
         return handle_queue_list()
+
+    if intent == MUTE:
+        return handle_mute()
+
+    if intent == UNMUTE:
+        return handle_unmute()
+
+    if intent == VOLUME_STATUS:
+        return handle_volume_status()
+
+    if intent == UNLIKE_SONG:
+        return handle_unlike_song()
+
+    if intent == CHECK_LIKE:
+        return handle_check_like()
+
+    if intent == LIST_DEVICES:
+        return handle_list_devices()
+
+    if intent == TRANSFER_DEVICE:
+        return handle_transfer_device(entities.get("device_name"))
+
+    if intent == HELP:
+        return handle_help()
+
+    if intent == WHO_SINGS:
+        return handle_now_playing()
 
     return "No entendí ese comando."

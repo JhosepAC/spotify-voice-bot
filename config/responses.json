@@ -116,5 +116,41 @@
   "QUEUE_LIST": [
     "Te digo la cola.",
     "A ver qué sigue."
+  ],
+  "MUTE": [
+    "Silenciado.",
+    "Sin sonido."
+  ],
+  "UNMUTE": [
+    "Sonido de vuelta.",
+    "Ya se escucha."
+  ],
+  "VOLUME_STATUS": [
+    "Te digo el volumen.",
+    "A ver en cuánto está."
+  ],
+  "LIST_DEVICES": [
+    "Buscando dispositivos.",
+    "A ver dónde suena."
+  ],
+  "TRANSFER_DEVICE": [
+    "Pasando la música.",
+    "Cambiando de dispositivo."
+  ],
+  "UNLIKE_SONG": [
+    "Quitada de favoritos.",
+    "Ya no te la guardo."
+  ],
+  "CHECK_LIKE": [
+    "Revisando favoritos.",
+    "A ver si está guardada."
+  ],
+  "HELP": [
+    "Te cuento qué sé hacer.",
+    "Claro, escucha."
+  ],
+  "WHO_SINGS": [
+    "Te digo quién canta.",
+    "A ver quién es."
   ]
 }

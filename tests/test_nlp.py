@@ -72,6 +72,17 @@ CASES = [
     ("agrega esta a la cola", "QUEUE_ADD", {}),
     ("pon despacito en la cola", "QUEUE_ADD", {"track_name": "despacito"}),
     ("que hay en la cola", "QUEUE_LIST", {}),
+    # Phase 3: devices + library + help
+    ("sin sonido", "MUTE", {}),
+    ("silencia", "PAUSE", {}),
+    ("activa el sonido", "UNMUTE", {}),
+    ("en que volumen esta", "VOLUME_STATUS", {}),
+    ("que dispositivos hay", "LIST_DEVICES", {}),
+    ("pasalo al celular", "TRANSFER_DEVICE", {}),
+    ("no me gusta esta", "UNLIKE_SONG", {}),
+    ("esta en mis favoritos", "CHECK_LIKE", {}),
+    ("que puedes hacer", "HELP", {}),
+    ("quien canta esto", "NOW_PLAYING", {}),
 ]
 
 # Noisy STT inputs must still resolve (fuzzy robustness)
