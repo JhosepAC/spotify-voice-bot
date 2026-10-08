@@ -141,7 +141,7 @@ _RESUME_RE = re.compile(
     re.I
 )
 _NEXT_RE = re.compile(
-    r'\b(siguiente|next|skip|salta|pasa(la)?|sáltala|saltate)\b',
+    r'\b(siguiente|next|skip|salta|pasa(la)?|sáltala|saltate|que sigue)\b',
     re.I
 )
 _PREV_RE = re.compile(
@@ -174,8 +174,22 @@ _ORDINAL_MAP = {
     "primera": 1, "segunda": 2, "tercera": 3, "cuarta": 4, "quinta": 5,
     "1": 1, "2": 2, "3": 3, "4": 4, "5": 5,
 }
+
+# Control intents resolved by precise contiguous regexes. Checked before
+# fuzzy matching so stop/transport commands never lose to subset overlap
+# ("para la música" must not become PLAY_PLAYLIST).
+_CONTROL_INTENTS = frozenset({
+    PAUSE,
+    RESUME,
+    NEXT_TRACK,
+    PREVIOUS_TRACK,
+    LIKE_SONG,
+    VOLUME_UP,
+    VOLUME_DOWN,
+    SET_VOLUME,
+})
 _ARTIST_RE = re.compile(
-    r'\b(algo de|música de|canciones de|temas de|lo de|artista|pon a)\b',
+    r'\b(algo de|música de|musica de|canciones de|temas de|lo de|artista|pon a)\b',
     re.I
 )
 _ALBUM_RE = re.compile(
@@ -195,7 +209,7 @@ _TRACK_SPLIT_RE = re.compile(
     re.I
 )
 _ARTIST_SPLIT_RE = re.compile(
-    r'\b(de|del|del artista|algo de|música de|canciones de|temas de)\b',
+    r'\b(de|del|del artista|algo de|música de|musica de|canciones de|temas de)\b',
     re.I
 )
 
@@ -215,16 +229,16 @@ def _rule_based_classify(text: str) -> dict:
     if _PAUSE_RE.search(t):
         return {"intent": PAUSE, "entities": {}, "confidence": 0.9}
 
-    if _RESUME_RE.search(t) and not has_play_verb:
-        return {"intent": RESUME, "entities": {}, "confidence": 0.85}
-
-    # Transport commands only win when there is no explicit play request.
-    # This prevents "pon otra de Karol G" from becoming NEXT_TRACK.
+    # Transport commands win over generic "sigue" resume so that
+    # "la que sigue" resolves to NEXT_TRACK, not RESUME.
     if _NEXT_RE.search(t) and not has_play_verb:
         return {"intent": NEXT_TRACK, "entities": {}, "confidence": 0.9}
 
     if _PREV_RE.search(t) and not has_play_verb:
         return {"intent": PREVIOUS_TRACK, "entities": {}, "confidence": 0.9}
+
+    if _RESUME_RE.search(t) and not has_play_verb:
+        return {"intent": RESUME, "entities": {}, "confidence": 0.85}
 
     if _LIKE_RE.search(t):
         return {"intent": LIKE_SONG, "entities": {}, "confidence": 0.9}
@@ -329,8 +343,31 @@ def classify_intent(text: str) -> dict:
     if selection:
         return selection
 
+    # Precise control commands first (contiguous regexes beat fuzzy overlap).
+    early_rule = _rule_based_classify(text)
+    if (
+        early_rule["intent"] in _CONTROL_INTENTS
+        and early_rule.get("confidence", 0.0) >= 0.85
+    ):
+        return early_rule
+
     local = score_intent(text)
-    if local["intent"] != UNKNOWN and local["score"] >= HIGH_CONFIDENCE:
+    # Fast path only on decisive local matches. Close calls (low margin)
+    # fall through to Ollama/rules so "la que sigue" does not lose to "sigue".
+    # A play verb vetoes non-play local intents so "reproduce ... para
+    # estudiar" never resolves to PAUSE via the "para" overlap.
+    has_play_verb = bool(_PLAY_RE.search(text.lower()))
+    play_only = (
+        local["intent"] not in (PLAY_TRACK, PLAY_ARTIST, PLAY_ALBUM, PLAY_PLAYLIST)
+        and has_play_verb
+    )
+    decisive = (
+        local["intent"] != UNKNOWN
+        and local["score"] >= HIGH_CONFIDENCE
+        and local["confidence"] >= 0.85
+        and not play_only
+    )
+    if decisive:
         if local["intent"] in (CONFIRM_YES, CONFIRM_NO, CANCEL, NOW_PLAYING):
             return {
                 "intent": local["intent"],
