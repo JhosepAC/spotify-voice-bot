@@ -27,6 +27,7 @@ from voice.audio_config import (
 
 from voice.whisper_engine import transcribe_audio
 from voice.transcription_stabilizer import stabilize_transcription
+from config.settings import AUDIO_SAMPLE_RATE, SAVE_AUDIO
 
 
 class _AdaptiveVAD:
@@ -131,6 +132,8 @@ def listen_command() -> str:
     """
     Main entry: capture microphone, transcribe, stabilize.
 
+    Saves an audio snapshot to temp/ for STT debugging.
+
     Returns:
         Transcribed and cleaned command string (empty string on failure).
     """
@@ -138,6 +141,14 @@ def listen_command() -> str:
 
     if len(audio) == 0:
         return ""
+
+    if SAVE_AUDIO:
+        try:
+            from assistant.telemetry import save_audio_snapshot
+
+            save_audio_snapshot(audio, AUDIO_SAMPLE_RATE)
+        except Exception:
+            pass
 
     raw_text = transcribe_audio(audio)
     clean_text = stabilize_transcription(raw_text)

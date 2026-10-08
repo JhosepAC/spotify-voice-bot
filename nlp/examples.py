@@ -40,7 +40,6 @@ PLAY_PLAYLIST = [
 PAUSE = [
     "pausa",
     "dale pausa",
-    "para la musica",
     "deten la musica",
     "stop",
     "silencio",
@@ -125,7 +124,9 @@ CONFIRM_YES = [
 CONFIRM_NO = [
     "no",
     "no esa no",
-    "otra",
+    "esa no",
+    "no esa, otra",
+    "ninguna de esas",
     "ninguna",
     "mejor no",
 ]
