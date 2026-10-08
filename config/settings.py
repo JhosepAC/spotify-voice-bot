@@ -67,6 +67,9 @@ DUCKING_LEVEL = int(os.getenv("DUCKING_LEVEL", "10"))
 TELEMETRY_ENABLED = os.getenv("TELEMETRY_ENABLED", "true").lower() == "true"
 SAVE_AUDIO = os.getenv("SAVE_AUDIO", "true").lower() == "true"
 
+# ─── Spotify network ──────────────────────────────────────────────────────────
+SPOTIFY_TIMEOUT = int(os.getenv("SPOTIFY_TIMEOUT", "10"))
+
 # ─── Directories ──────────────────────────────────────────────────────────────
 TEMP_DIR.mkdir(exist_ok=True)
 LOGS_DIR.mkdir(exist_ok=True)

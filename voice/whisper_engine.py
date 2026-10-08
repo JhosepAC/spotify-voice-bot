@@ -1,6 +1,7 @@
 """
 Faster-Whisper transcription engine.
 Optimized for minimum latency on CPU with maximum accuracy.
+Model loads lazily on first use so startup stays instant.
 """
 
 import numpy as np
@@ -14,18 +15,23 @@ from voice.audio_config import (
     DEBUG_TRANSCRIPTION,
 )
 
+_model: WhisperModel | None = None
 
-print("Cargando modelo Faster-Whisper...")
 
-model = WhisperModel(
-    WHISPER_MODEL_SIZE,
-    device="cpu",
-    compute_type="int8",
-    cpu_threads=4,
-    num_workers=1,
-)
-
-print(f"Modelo '{WHISPER_MODEL_SIZE}' listo.")
+def get_model() -> WhisperModel:
+    """Load the model once, on first transcription (not at import)."""
+    global _model
+    if _model is None:
+        print("Loading Faster-Whisper model...")
+        _model = WhisperModel(
+            WHISPER_MODEL_SIZE,
+            device="cpu",
+            compute_type="int8",
+            cpu_threads=4,
+            num_workers=1,
+        )
+        print(f"Model '{WHISPER_MODEL_SIZE}' ready.")
+    return _model
 
 
 def transcribe_audio(audio_data: np.ndarray) -> str:
@@ -50,7 +56,7 @@ def transcribe_audio(audio_data: np.ndarray) -> str:
     if rms < 0.001:
         return ""
 
-    segments, info = model.transcribe(
+    segments, info = get_model().transcribe(
         audio_data,
         language=WHISPER_LANGUAGE,
         beam_size=WHISPER_BEAM_SIZE,

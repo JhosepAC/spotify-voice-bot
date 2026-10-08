@@ -10,6 +10,7 @@ from config.settings import (
     SPOTIFY_REDIRECT_URI,
     SPOTIFY_SCOPES,
     SPOTIFY_CACHE_PATH,
+    SPOTIFY_TIMEOUT,
 )
 
 _client: spotipy.Spotify | None = None
@@ -30,6 +31,9 @@ def get_spotify_client() -> spotipy.Spotify:
             cache_path=SPOTIFY_CACHE_PATH,
             open_browser=True,
         )
-        _client = spotipy.Spotify(auth_manager=auth_manager)
+        _client = spotipy.Spotify(
+            auth_manager=auth_manager,
+            requests_timeout=SPOTIFY_TIMEOUT,
+        )
 
     return _client
